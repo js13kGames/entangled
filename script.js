@@ -5,6 +5,11 @@ let context = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+let isMovingLeft = {value: false, timestamp: new Date().toISOString()};
+let isMovingRight = {value: false, timestamp: new Date().toISOString()};
+let isMovingUp = {value: false, timestamp: new Date().toISOString()};
+let isMovingDown = {value: false, timestamp: new Date().toISOString()};
+
 let player = new Player();
 let world = new World();
 
@@ -52,8 +57,8 @@ function randomBetween(min,max) {
 }
 
 function RectCircleColliding(circle, rect) {
-    let distX = Math.abs(circle.x - (rect.x - Math.abs(world.x)) - rect.width / 2);
-    let distY = Math.abs(circle.y - (rect.y - Math.abs(world.y)) - rect.height / 2);
+    let distX = Math.abs(circle.x - (rect.x - Math.abs(world.x) * (world.x > 0 ? -1 : 1)) - rect.width / 2);
+    let distY = Math.abs(circle.y - (rect.y - Math.abs(world.y) * (world.y > 0 ? -1 : 1)) - rect.height / 2);
 
     if (distX > (rect.width / 2 + circle.radius)) {
         return false;
@@ -76,14 +81,16 @@ function RectCircleColliding(circle, rect) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-setInterval(() => {
+function render() {
     context.fillStyle = 'black';
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     world.update().draw();
     player.update().draw();
 
-}, 60);
+    window.requestAnimationFrame(render);
+};
+window.requestAnimationFrame(render);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +101,7 @@ function World() {
     this.y = this.height / -3;
 
     this.update = function() {
-        if (player.isMovingLeft) {
+        if (isMovingLeft.value && (!isMovingRight.value || isMovingRight.timestamp < isMovingLeft.timestamp)) {
             this.x += player.speed;
             if (player.x - player.radius <= this.x) {
                 this.x = player.x - player.radius;
@@ -105,7 +112,7 @@ function World() {
                     break;
                 }
             }
-        } else if (player.isMovingRight) {
+        } else if (isMovingRight.value) {
             this.x -= player.speed;
             if (player.x + player.radius >= this.x + this.width) {
                 this.x = player.x + player.radius - this.width;
@@ -117,7 +124,7 @@ function World() {
                 }
             }
         }
-        if (player.isMovingUp) {
+        if (isMovingUp.value && (!isMovingDown.value || isMovingDown.timestamp < isMovingUp.timestamp)) {
             this.y += player.speed;
             if (player.y - player.radius <= this.y) {
                 this.y = player.y - player.radius;
@@ -128,7 +135,7 @@ function World() {
                     break;
                 }
             }
-        } else if (player.isMovingDown) {
+        } else if (isMovingDown.value) {
             this.y -= player.speed;
             if (player.y + player.radius >= this.y + this.height) {
                 this.y = player.y + player.radius - this.height;
@@ -163,11 +170,7 @@ function Player() {
     this.x = canvas.width / 2;
     this.y = canvas.height / 2;
     this.radius = 30;
-    this.speed = 30;
-    this.isMovingLeft = false;
-    this.isMovingRight = false;
-    this.isMovingUp = false;
-    this.isMovingDown = false;
+    this.speed = 5;
 
     this.update = function() {
 
@@ -186,18 +189,19 @@ function Player() {
 ////////////////////////////////////////////////////////////////////////////////
 
 document.addEventListener('keydown', function(e) {
+    let now = new Date().toISOString();
     if (e.code == 'KeyA') {
-        player.isMovingRight = false;
-        player.isMovingLeft = true;
+        isMovingLeft.value = true;
+        isMovingLeft.timestamp = now;
     } else if (e.code == 'KeyD') {
-        player.isMovingLeft = false;
-        player.isMovingRight = true;
+        isMovingRight.value = true;
+        isMovingRight.timestamp = now;
     } else if (e.code == 'KeyW') {
-        player.isMovingDown = false;
-        player.isMovingUp = true;
+        isMovingUp.value = true;
+        isMovingUp.timestamp = now;
     } else if (e.code == 'KeyS') {
-        player.isMovingUp = false;
-        player.isMovingDown = true;
+        isMovingDown.value = true;
+        isMovingDown.timestamp = now;
     } else if (e.code == 'Space') {
         // fire
     } else if (e.code == 'Digit1') {
@@ -211,13 +215,13 @@ document.addEventListener('keydown', function(e) {
 
 document.addEventListener('keyup', function(e) {
     if (e.code == 'KeyA') {
-        player.isMovingLeft = false;
+        isMovingLeft.value = false;
     } else if (e.code == 'KeyD') {
-        player.isMovingRight = false;
+        isMovingRight.value = false;
     } else if (e.code == 'KeyW') {
-        player.isMovingUp = false;
+        isMovingUp.value = false;
     } else if (e.code == 'KeyS') {
-        player.isMovingDown = false;
+        isMovingDown.value = false;
     }
 });
 
