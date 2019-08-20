@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////// initializations
 
 let canvas = document.querySelector('canvas');
 let context = canvas.getContext('2d');
@@ -12,45 +12,17 @@ let isMovingDown = {value: false, timestamp: new Date().toISOString()};
 
 let player = new Player();
 let world = new World();
+let pebbles = [];
+let rocks = [];
 
-let pebbles = generatePebbles();
-function generatePebbles() {
-    let arr = [];
-    for (let i = 0; i < 300; i++) {
-        arr.push({
-            x: randomBetween(0, world.width),
-            y: randomBetween(0, world.height),
-            radius: randomBetween(3, 8),
-            draw: function() {
-                context.lineWidth = 3;
-                context.beginPath();
-                context.arc(world.x + this.x, world.y + this.y, this.radius, Math.PI * 2, false);
-                context.fillStyle = 'rgba(50, 50, 50, 0.6)';
-                context.fill();
-            }
-        });
-    }
-    return arr;
-};
+for (let i = 0; i < 300; i++) {
+    pebbles.push(new Pebble());
+}
+for (let i = 0; i < 50; i++) {
+    rocks.push(new Rock);
+}
 
-let rocks = generateRocks();
-function generateRocks() {
-    let arr = [];
-    for (let i = 0; i < 50; i++) {
-        arr.push({
-            x: randomBetween(300, world.width - 300),
-            y: randomBetween(300, world.height - 300),
-            width: randomBetween(100, 300),
-            height: randomBetween(100, 300),
-            draw: function() {
-                context.lineWidth = 3;
-                context.fillStyle = 'rgba(50, 50, 50, 1)';
-                context.fillRect(world.x + this.x, world.y + this.y, this.width, this.height);
-            }
-        });
-    }
-    return arr;
-};
+//////////////////////////////////////////////////////////////////////////////// support functions
 
 function randomBetween(min,max) {
     return Math.floor(Math.random()*(max-min))+min;
@@ -79,7 +51,7 @@ function RectCircleColliding(circle, rect) {
     return (dx * dx + dy * dy <= (circle.radius * circle.radius));
 };
 
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////// main loop
 
 function render() {
     context.fillStyle = 'black';
@@ -92,14 +64,13 @@ function render() {
 };
 window.requestAnimationFrame(render);
 
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////// objects
 
 function World() {
     this.width = 5000;
     this.height = 5000;
     this.x = this.width / -3;
     this.y = this.height / -3;
-
     this.update = function() {
         if (isMovingLeft.value && (!isMovingRight.value || isMovingRight.timestamp < isMovingLeft.timestamp)) {
             this.x += player.speed;
@@ -108,7 +79,7 @@ function World() {
             }
             for (let rock of rocks) {
                 if (RectCircleColliding(player, rock)) {
-                    this.x -= rock.x + this.x + rock.width - player.x + player.radius + 1;
+                    this.x -= player.speed;
                     break;
                 }
             }
@@ -119,7 +90,7 @@ function World() {
             }
             for (let rock of rocks) {
                 if (RectCircleColliding(player, rock)) {
-                    this.x += player.x + player.radius - rock.x - this.x + 1;
+                    this.x += player.speed;
                     break;
                 }
             }
@@ -131,7 +102,7 @@ function World() {
             }
             for (let rock of rocks) {
                 if (RectCircleColliding(player, rock)) {
-                    this.y -= rock.y + this.y + rock.height - player.y + player.radius + 1;
+                    this.y -= player.speed;
                     break;
                 }
             }
@@ -142,14 +113,13 @@ function World() {
             }
             for (let rock of rocks) {
                 if (RectCircleColliding(player, rock)) {
-                    this.y += player.y + player.radius - rock.y - this.y + 1;
+                    this.y += player.speed;
                     break;
                 }
             }
         }
         return this;
     };
-
     this.draw = function() {
         context.lineWidth = 10;
         context.strokeStyle = 'rgba(0, 0, 0, 1)';
@@ -171,12 +141,10 @@ function Player() {
     this.y = canvas.height / 2;
     this.radius = 30;
     this.speed = 5;
-
     this.update = function() {
 
         return this;
     };
-
     this.draw = function() {
         context.lineWidth = 3;
         context.beginPath();
@@ -186,7 +154,32 @@ function Player() {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+function Pebble() {
+    this.x = randomBetween(0, world.width);
+    this.y = randomBetween(0, world.height);
+    this.radius = randomBetween(3, 8);
+    this.draw = function() {
+        context.lineWidth = 3;
+        context.beginPath();
+        context.arc(world.x + this.x, world.y + this.y, this.radius, Math.PI * 2, false);
+        context.fillStyle = 'rgba(50, 50, 50, 0.6)';
+        context.fill();
+    }
+}
+
+function Rock() {
+    this.x = randomBetween(300, world.width - 300);
+    this.y = randomBetween(300, world.height - 300);
+    this.width = randomBetween(100, 300);
+    this.height = randomBetween(100, 300);
+    this.draw = function() {
+        context.lineWidth = 3;
+        context.fillStyle = 'rgba(50, 50, 50, 1)';
+        context.fillRect(world.x + this.x, world.y + this.y, this.width, this.height);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////// events
 
 document.addEventListener('keydown', function(e) {
     let now = new Date().toISOString();
