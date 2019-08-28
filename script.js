@@ -1,64 +1,66 @@
-//////////////////////////////////////////////////////////////////////////////// initializations
 
-let canvas = document.querySelector('canvas');
-let context = canvas.getContext('2d');
+//////////////////////////////////////////////////////////////////////////////// intitializations
+
+let canvas = document.getElementById("back");
+let context = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let isMovingLeft = {value: false, timestamp: new Date().toISOString()};
-let isMovingRight = {value: false, timestamp: new Date().toISOString()};
-let isMovingUp = {value: false, timestamp: new Date().toISOString()};
-let isMovingDown = {value: false, timestamp: new Date().toISOString()};
-
 let player = new Player();
-let world = new World();
-let pebbles = [];
-let rocks = [];
+let goal = new Goal();
 
-for (let i = 0; i < 300; i++) {
-    pebbles.push(new Pebble());
-}
-for (let i = 0; i < 50; i++) {
-    rocks.push(new Rock);
-}
+let border = 50;
+let connectionOppacity = 0;
 
 //////////////////////////////////////////////////////////////////////////////// support functions
 
-function randomBetween(min,max) {
-    return Math.floor(Math.random()*(max-min))+min;
-}
+function randomBetween(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+};
 
-function RectCircleColliding(circle, rect) {
-    let distX = Math.abs(circle.x - (rect.x - Math.abs(world.x) * (world.x > 0 ? -1 : 1)) - rect.width / 2);
-    let distY = Math.abs(circle.y - (rect.y - Math.abs(world.y) * (world.y > 0 ? -1 : 1)) - rect.height / 2);
+function getHypothenuse(x1, y1, x2, y2) {
+    var x = Math.abs(x1 - x2);
+    var y = Math.abs(y1 - y2);
+    return Math.sqrt((x * x) + (y * y));
+};
 
-    if (distX > (rect.width / 2 + circle.radius)) {
-        return false;
-    }
-    if (distY > (rect.height / 2 + circle.radius)) {
-        return false;
-    }
+function clearCanvas() {
+    context.fillStyle = "#001634";
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (distX <= (rect.width / 2)) {
-        return true;
-    }
-    if (distY <= (rect.height / 2)) {
-        return true;
-    }
+    drawBorders();
+};
 
-    let dx = distX - rect.width / 2;
-    let dy = distY - rect.height / 2;
-    return (dx * dx + dy * dy <= (circle.radius * circle.radius));
+function drawBorders() {
+    let margin = border - player.radius;
+    context.beginPath();
+    context.moveTo(margin, margin);
+    context.lineTo(canvas.width - margin, margin);
+    context.lineTo(canvas.width - margin, canvas.height - margin);
+    context.lineTo(margin, canvas.height-margin);
+    context.lineTo(margin, margin);
+    context.strokeStyle = "rgba(255, 255, 255, 0.15)";
+    context.stroke();
 };
 
 //////////////////////////////////////////////////////////////////////////////// main loop
 
 function render() {
-    context.fillStyle = 'black';
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    clearCanvas();
 
-    world.update().draw();
     player.update().draw();
+    goal.update().draw();
+
+    connectionOppacity -= connectionOppacity > 0 ? 0.01 : 0; // draw particle connection
+    context.beginPath();
+    context.moveTo(player.x, player.y);
+    context.lineTo(goal.x, goal.y);
+    context.strokeStyle = `rgba(255, 255, 255, ${connectionOppacity})`;
+    context.stroke();
+
+    if (getHypothenuse(player.x, player.y, goal.x, goal.y) < player.radius + goal.radius) { // check hit
+        goal.reposition();
+    }
 
     window.requestAnimationFrame(render);
 };
@@ -66,160 +68,96 @@ window.requestAnimationFrame(render);
 
 //////////////////////////////////////////////////////////////////////////////// objects
 
-function World() {
-    this.width = 5000;
-    this.height = 5000;
-    this.x = this.width / -3;
-    this.y = this.height / -3;
-    this.update = function() {
-        if (isMovingLeft.value && (!isMovingRight.value || isMovingRight.timestamp < isMovingLeft.timestamp)) {
-            this.x += player.speed;
-            if (player.x - player.radius <= this.x) {
-                this.x = player.x - player.radius;
-            }
-            for (let rock of rocks) {
-                if (RectCircleColliding(player, rock)) {
-                    this.x -= player.speed;
-                    break;
-                }
-            }
-        } else if (isMovingRight.value) {
-            this.x -= player.speed;
-            if (player.x + player.radius >= this.x + this.width) {
-                this.x = player.x + player.radius - this.width;
-            }
-            for (let rock of rocks) {
-                if (RectCircleColliding(player, rock)) {
-                    this.x += player.speed;
-                    break;
-                }
-            }
-        }
-        if (isMovingUp.value && (!isMovingDown.value || isMovingDown.timestamp < isMovingUp.timestamp)) {
-            this.y += player.speed;
-            if (player.y - player.radius <= this.y) {
-                this.y = player.y - player.radius;
-            }
-            for (let rock of rocks) {
-                if (RectCircleColliding(player, rock)) {
-                    this.y -= player.speed;
-                    break;
-                }
-            }
-        } else if (isMovingDown.value) {
-            this.y -= player.speed;
-            if (player.y + player.radius >= this.y + this.height) {
-                this.y = player.y + player.radius - this.height;
-            }
-            for (let rock of rocks) {
-                if (RectCircleColliding(player, rock)) {
-                    this.y += player.speed;
-                    break;
-                }
-            }
-        }
-        return this;
-    };
-    this.draw = function() {
-        context.lineWidth = 10;
-        context.strokeStyle = 'rgba(0, 0, 0, 1)';
-        context.strokeRect(this.x, this.y, this.width, this.height);
-        context.fillStyle = 'gray';
-        context.fillRect(this.x, this.y, this.width, this.height);
-
-        for (let pebble of pebbles) {
-            pebble.draw();
-        }
-        for (let rock of rocks) {
-            rock.draw();
-        }
-    }
-}
-
 function Player() {
-    this.x = canvas.width / 2;
+    this.x = 200;
     this.y = canvas.height / 2;
-    this.radius = 30;
-    this.speed = 5;
+    this.radius = 15;
+    this.speed = 10;
+    this.destinationX = this.x;
+    this.destinationY = this.y;
     this.update = function() {
-
+        this.x += (this.destinationX - this.x) / 3;
+        this.y += (this.destinationY - this.y) / 3;
         return this;
     };
     this.draw = function() {
-        context.lineWidth = 3;
         context.beginPath();
-        context.arc(this.x, this.y, this.radius, Math.PI * 2, false);
-        context.fillStyle = 'rgba(255, 255, 255, 1)';
+        context.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
+        context.fillStyle = "rgba(255, 255, 255, 0.5)";
+        context.strokeStyle = "#ffffff";
         context.fill();
-    }
-}
+        context.stroke();
+    };
+};
 
-function Pebble() {
-    this.x = randomBetween(0, world.width);
-    this.y = randomBetween(0, world.height);
-    this.radius = randomBetween(3, 8);
+function Goal() {
+    this.x = canvas.width - 200;
+    this.y = canvas.height / 2;
+    this.radius = 15;
+    this.acceleration = 0.9;
+    this.speed = randomBetween(3, 7);
+    this.angle = randomBetween(0, 360);
+    this.reposition = function() {
+        this.x = randomBetween(border, canvas.width - border);
+        this.y = randomBetween(border, canvas.height - border);
+    };
+    this.update = function() {
+        let dx = Math.cos(this.angle * Math.PI / 180) * this.speed;
+        let dy = Math.sin(this.angle * Math.PI / 180) * this.speed;
+        this.speed *= this.acceleration;
+        if (this.speed < 0.1) {
+            this.speed = randomBetween(3, 7);
+            this.angle = randomBetween(0, 360);
+        }
+        this.x += dx;
+        this.y += dy;
+        if (this.x < border) {
+            this.x = border;
+        }
+        if (this.x > canvas.width - border) {
+            this.x = canvas.width - border;
+        }
+        if (this.y < border) {
+            this.y = border;
+        }
+        if (this.y > canvas.height - border) {
+            this.y = canvas.height - border;
+        }
+        return this;
+    };
     this.draw = function() {
-        context.lineWidth = 3;
         context.beginPath();
-        context.arc(world.x + this.x, world.y + this.y, this.radius, Math.PI * 2, false);
-        context.fillStyle = 'rgba(50, 50, 50, 0.6)';
+        context.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
+        context.fillStyle = "rgba(255, 255, 255, 0.5)";
+        context.strokeStyle = "#ffffff";
         context.fill();
-    }
-}
-
-function Rock() {
-    this.x = randomBetween(300, world.width - 300);
-    this.y = randomBetween(300, world.height - 300);
-    this.width = randomBetween(100, 300);
-    this.height = randomBetween(100, 300);
-    this.draw = function() {
-        context.lineWidth = 3;
-        context.fillStyle = 'rgba(50, 50, 50, 1)';
-        context.fillRect(world.x + this.x, world.y + this.y, this.width, this.height);
-    }
-}
+        context.stroke();
+    };
+};
 
 //////////////////////////////////////////////////////////////////////////////// events
 
-document.addEventListener('keydown', function(e) {
-    let now = new Date().toISOString();
-    if (e.code == 'KeyA') {
-        isMovingLeft.value = true;
-        isMovingLeft.timestamp = now;
-    } else if (e.code == 'KeyD') {
-        isMovingRight.value = true;
-        isMovingRight.timestamp = now;
-    } else if (e.code == 'KeyW') {
-        isMovingUp.value = true;
-        isMovingUp.timestamp = now;
-    } else if (e.code == 'KeyS') {
-        isMovingDown.value = true;
-        isMovingDown.timestamp = now;
-    } else if (e.code == 'Space') {
-        // fire
-    } else if (e.code == 'Digit1') {
-        // equip 1
-    } else if (e.code == 'Digit2') {
-        // equip 1
-    } else if (e.code == 'Digit3') {
-        // equip 1
+canvas.addEventListener('mousemove', function (e) {
+    if (e.pageX > border && e.pageX < canvas.width - border) {
+        player.destinationX = e.pageX;
     }
+    if (e.pageY > border && e.pageY < canvas.height - border) {
+        player.destinationY = e.pageY;
+    }
+
+    if (e.pageX <= border) {
+        player.destinationX = border;
+    } else if (e.pageY <= border) {
+        player.destinationY = border;
+    } else if (e.pageX >= canvas.width - border) {
+        player.destinationX = canvas.width - border;
+    } else if (e.pageY >= canvas.height - border) {
+        player.destinationY = canvas.height - border;
+    };
 });
 
-document.addEventListener('keyup', function(e) {
-    if (e.code == 'KeyA') {
-        isMovingLeft.value = false;
-    } else if (e.code == 'KeyD') {
-        isMovingRight.value = false;
-    } else if (e.code == 'KeyW') {
-        isMovingUp.value = false;
-    } else if (e.code == 'KeyS') {
-        isMovingDown.value = false;
-    }
-});
-
-document.addEventListener('mousedown', function(e) {
-    console.log(e);
+canvas.addEventListener('mousedown', function() {
+    connectionOppacity = 0.3;
 });
 
 ////////////////////////////////////////////////////////////////////////////////
