@@ -14,9 +14,10 @@ for (let i = 0; i < particlesCount; i++) {
     particles.push(new Particle());
 }
 
-let instructionButton = new Button(canvas.width / 2 - 120, canvas.height / 2, 25, 'instruction');
-let playButton = new Button(canvas.width / 2, canvas.height / 2, 50, 'play');
-let leaderButton = new Button(canvas.width / 2 + 120, canvas.height / 2, 25, 'leader');
+let playButton = new Button(280, canvas.height / 2, 50, 'play');
+let instructionButton = new Button(280 - 67, canvas.height / 2 - 67, 30, 'instruction');
+let leaderButton = new Button(280 + 67, canvas.height / 2 + 67, 30, 'leader');
+let randButton = new Button(200, canvas.height / 2, 15, 'random');
 
 let border = 50;
 let connectionOppacity = 0;
@@ -27,6 +28,8 @@ let showLeaderBoard = false;
 let godMode = false;
 let score = 0;
 let name = '';
+let panelRadius = 0;
+let panelRaiudMax = canvas.height / 2 + 180;
 
 let scoreRecords = JSON.parse(localStorage.getItem('leaderboard'));
 if (!scoreRecords) {
@@ -42,11 +45,11 @@ if (!latestPlayer) {
 //////////////////////////////////////////////////////////////////////////////// support functions
 
 function reInitialize() {
-    console.log('RE');
     isPlaying = false;
     isGG = false;
     showInstruction = false;
     showLeaderBoard = false;
+    panelRadius = 0;
     score = 0;
     particles = [];
     for (let i = 0; i < particlesCount; i++) {
@@ -126,144 +129,254 @@ function drawConnectivityLine() {
     context.stroke();
 };
 
-function drawMainMenuStuff() {
-    let x = canvas.width / 2;
-    let y = canvas.height / 2;
+function drawTitle() {
+    let x = playButton.x + playButton.radius + 25;
+    let y = playButton.y;
+    let size = 23;
+    let spacing = 10;
 
+    context.lineWidth = 1;
+    context.strokeStyle = 'white';
+    context.fillStyle = 'white';
     if (playButton.isHit()) {
         context.shadowColor = 'white';
         context.shadowBlur = 15;
+        context.lineWidth = 3;
     }
 
-    context.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    context.fillStyle = '#001634';
-    context.beginPath();
-    context.moveTo(x - 120, y);
-    context.lineTo(x, y - 120);
-    context.lineTo(x + 120, y);
-    context.lineTo(x, y + 120);
-    context.lineTo(x - 120, y);
-    context.fill();
+    context.beginPath(); // E
+    context.moveTo(x, y);
+    context.lineTo(x + size, y);
+    context.lineTo(x + size, y - size / 2);
+    context.lineTo(x, y - size / 2);
+    context.lineTo(x, y + size / 2);
+    context.lineTo(x + size + 1, y + size / 2);
     context.stroke();
 
-    context.lineWidth = 3;
-    context.strokeStyle = 'rgba(255, 255 ,255 , 0.6)';
-    context.fillStyle = '#001634';
-    context.beginPath();
-    context.arc(x, y - 120, 25, Math.PI * 2, false);
+    context.beginPath(); // N
+    context.moveTo(x + size + spacing, y + size / 2 + 1);
+    context.lineTo(x + size + spacing, y - size / 2);
+    context.lineTo(x + size + spacing + size, y - size / 2);
+    context.lineTo(x + size + spacing + size, y + size / 2 + 1);
     context.stroke();
-    context.fill();
-    context.beginPath();
-    context.arc(x, y + 120, 25, Math.PI * 2, false);
+
+    context.beginPath(); // T
+    context.moveTo(x + size * 2 + spacing * 2, y - size / 2);
+    context.lineTo(x + size * 2 + spacing * 2 + size + 1, y - size / 2);
+    context.moveTo(x + size * 2 + spacing * 2 + size / 2, y - size / 2);
+    context.lineTo(x + size * 2 + spacing * 2 + size / 2, y + size / 2 + 1);
     context.stroke();
-    context.fill();
-    context.beginPath();
-    context.arc(x - 120, y, 25, Math.PI * 2, false);
+
+    context.beginPath(); // A
+    context.moveTo(x + size * 3 + spacing * 3 - 1, y - size / 2);
+    context.lineTo(x + size * 3 + spacing * 3 + size, y - size / 2);
+    context.lineTo(x + size * 3 + spacing * 3 + size, y + size / 2);
+    context.lineTo(x + size * 3 + spacing * 3, y + size / 2);
+    context.lineTo(x + size * 3 + spacing * 3, y);
+    context.lineTo(x + size * 3 + spacing * 3 + size, y);
     context.stroke();
-    context.fill();
-    context.beginPath();
-    context.arc(x + 120, y, 25, Math.PI * 2, false);
+
+    context.beginPath(); // N
+    context.moveTo(x + size * 4 + spacing * 4, y + size / 2 + 1);
+    context.lineTo(x + size * 4 + spacing * 4, y - size / 2);
+    context.lineTo(x + size * 4 + spacing * 4 + size, y - size / 2);
+    context.lineTo(x + size * 4 + spacing * 4 + size, y + size / 2 + 1);
     context.stroke();
-    context.fill();
+
+    context.beginPath(); // G
+    context.arc(x + size * 5 + spacing * 5 + size / 2, y, size / 2 + 2, Math.PI * 2, false);
+    context.stroke();
+    context.beginPath();
+    context.arc(x + size * 5 + spacing * 5 + size / 2 - 5, y + size - 8, 7, Math.PI * 2 + 1.8, false - 2.2);
+    context.stroke();
+    context.beginPath();
+    context.ellipse(x + size * 5 + spacing * 5 + size / 2, y + 34, size - 10, size - 5, Math.PI / 2.3, Math.PI * 2, false);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(x + size * 5 + spacing * 5 + size + 5, y - size / 2 - 1 - 5);
+    context.lineTo(x + size * 5 + spacing * 5 + size - 3, y - size / 2 + 3);
+    context.stroke();
+
+    context.beginPath(); // L
+    context.moveTo(x + size * 6 + spacing * 6, y - size / 2 - 1);
+    context.lineTo(x + size * 6 + spacing * 6, y + size / 2);
+    context.lineTo(x + size * 6 + spacing * 6 + size + 1, y + size / 2);
+    context.stroke();
+
+    context.beginPath(); // E
+    context.moveTo(x + size * 7 + spacing * 7, y);
+    context.lineTo(x + size * 7 + spacing * 7 + size, y);
+    context.lineTo(x + size * 7 + spacing * 7 + size, y - size / 2);
+    context.lineTo(x + size * 7 + spacing * 7, y - size / 2);
+    context.lineTo(x + size * 7 + spacing * 7, y + size / 2);
+    context.lineTo(x + size * 7 + spacing * 7 + size + 1, y + size / 2);
+    context.stroke();
+
+    context.beginPath(); // D
+    context.moveTo(x + size * 8 + spacing * 8 - 1, y - size / 2);
+    context.lineTo(x + size * 8 + spacing * 8 + size / 2 + 5, y - size / 2);
+    context.lineTo(x + size * 8 + spacing * 8 + size, y);
+    context.lineTo(x + size * 8 + spacing * 8 + size / 2 + 5, y + size / 2);
+    context.lineTo(x + size * 8 + spacing * 8, y + size / 2);
+    context.lineTo(x + size * 8 + spacing * 8, y - size / 2);
+    context.stroke();
+
+    context.shadowBlur = 0;
     context.lineWidth = 1;
+};
 
-    context.beginPath(); // right circles
-    context.arc(x + 164, y, 12, Math.PI * 2, false);
-    context.fill();
+function drawPanel() {
+    context.shadowColor = 'white';
+    context.shadowBlur = 15;
+    context.fillStyle = 'rgba(10, 32, 62, 1)';
     context.beginPath();
-    context.arc(x + 104, y - 40, 10, Math.PI * 2, false);
+    context.arc(100, canvas.height / 2, panelRadius, Math.PI * 2, false);
     context.fill();
-    context.beginPath();
-    context.arc(x + 104, y + 40, 10, Math.PI * 2, false);
-    context.fill();
-    context.beginPath(); // left circles
-    context.arc(x - 164, y, 12, Math.PI * 2, false);
-    context.fill();
-    context.beginPath();
-    context.arc(x - 104, y - 40, 10, Math.PI * 2, false);
-    context.fill();
-    context.beginPath();
-    context.arc(x - 104, y + 40, 10, Math.PI * 2, false);
-    context.fill();
-    context.beginPath(); // top circles
-    context.arc(x, y - 164, 12, Math.PI * 2, false);
-    context.fill();
-    context.beginPath();
-    context.arc(x - 40, y - 104, 10, Math.PI * 2, false);
-    context.fill();
-    context.beginPath();
-    context.arc(x + 40, y - 104, 10, Math.PI * 2, false);
-    context.fill();
-    context.beginPath(); // bottom circles
-    context.arc(x, y + 164, 12, Math.PI * 2, false);
-    context.fill();
-    context.beginPath();
-    context.arc(x - 40, y + 104, 10, Math.PI * 2, false);
-    context.fill();
-    context.beginPath();
-    context.arc(x + 40, y + 104, 10, Math.PI * 2, false);
-    context.fill();
-    context.beginPath(); // extra circles
-    context.arc(x + 117, y + 117, 6, Math.PI * 2, false);
-    context.fill();
-    context.beginPath();
-    context.arc(x - 117, y + 117, 6, Math.PI * 2, false);
-    context.fill();
-    context.beginPath();
-    context.arc(x + 117, y - 117, 6, Math.PI * 2, false);
-    context.fill();
-    context.beginPath();
-    context.arc(x - 117, y - 117, 6, Math.PI * 2, false);
-    context.fill();
-    context.beginPath(); // bottom right square
-    context.moveTo(x + 90, y + 90 - 20);
-    context.lineTo(x + 90 + 20, y + 90);
-    context.lineTo(x + 90, y + 90 + 20);
-    context.lineTo(x + 90 - 20, y + 90);
-    context.lineTo(x + 90, y + 90 -20);
-    context.fill();
-    context.beginPath(); // bottom left square
-    context.moveTo(x - 90, y + 90 - 20);
-    context.lineTo(x - 90 + 20, y + 90);
-    context.lineTo(x - 90, y + 90 + 20);
-    context.lineTo(x - 90 - 20, y + 90);
-    context.lineTo(x - 90, y + 90 -20);
-    context.fill();
-    context.beginPath(); // upper left square
-    context.moveTo(x - 90, y - 90 - 20);
-    context.lineTo(x - 90 + 20, y - 90);
-    context.lineTo(x - 90, y - 90 + 20);
-    context.lineTo(x - 90 - 20, y - 90);
-    context.lineTo(x - 90, y - 90 -20);
-    context.fill();
-    context.beginPath(); // upper right square
-    context.moveTo(x + 90, y - 90 - 20);
-    context.lineTo(x + 90 + 20, y - 90);
-    context.lineTo(x + 90, y - 90 + 20);
-    context.lineTo(x + 90 - 20, y - 90);
-    context.lineTo(x + 90, y - 90 -20);
-    context.fill();
-
-
     context.shadowBlur = 0;
 };
 
 function drawInstructions() {
-    context.strokeStyle = 'white';
-    context.fillStyle = 'rgba(0, 22, 52, 1)';
-    context.beginPath();
-    context.arc(canvas.width / 2, canvas.height / 2, 270, Math.PI * 2, false);
-    context.stroke();
-    context.fill();
+    let story = [
+        'There was once two quantumly entangled particles',
+        'which can only get close to each other but may never meet',
+        'as they are cosmically destined to stay away from each other.',
+        '',
+        'All the Quantum Universe\'s a stage,',
+        'these two particles merely are players, but dance forever in unison.',
+        '',
+        'This is a story about our particle, forever seeking a way back to its unique partner.',
+        '',
+        'Our particle can seemingly sense its partner particle\'s relative space-time coordinate,',
+        'however, its partner particle is always moving from one point in space to another,',
+        'thus, making it more difficult for our particle to reunite with its partner particle.',
+        '[[[ Click to activate quantum beam [.], this beam points to your destined pair ]]]',
+        '[[[ You have a max quantum beam charge of 3 ]]]',
+        '',
+        'Other particles effortlessly bond with others, but not our particle.',
+        'Our particle\'s attributes are so unique, rare, and inharmonious',
+        'to other particles\' vibrations, that just getting minimal contact with another particle',
+        'could crush that particle to its most basic level before disappearing.',
+        'Getting in contact with another particle could hurt both particles.',
+        '[[[ Avoid getting in contact with other particles. ]]]',
+        '[[[ Colliding with other particles will reduce your HP: <3 ]]]',
+        '',
+        'Only one particle in existence can withstand and match our particle\'s',
+        'unique vibration, our particle\'s destined pair.',
+        'Our pair particle is strong enough to not get crushed',
+        'when getting in contact with our particle,',
+        'in fact, it even empowers our particle, recharging its energy, but by doing this,',
+        'it reduces its energy to the level that it can\'t',
+        'handle our particle\'s vibrations, our pair particle should relocate.',
+        'It knows that staying won\'t do any good. It must... move away. To restore its ',
+        'energy levels and regain its original vibration. Until they meet again.',
+        '[[[ Getting in contact with you pair particle increases your score and recharges',
+        'your quantum beam charge to 3, then teleports to another location ]]]'
+    ];
+
+    let x = 50;
+    let y = canvas.height / 2;
+    let fontSize = 13;
+    let spacing = 7;
+    context.textAlign = 'left';
+    context.font = `bold ${fontSize}px Arial`;
+    // context.textBaseline = 'middle';
+
+    for (let i = 0; i < story.length; i++) {
+        let text = story[i];
+        if (text[0] == '[' || text[text.length - 1] == ']') {
+            context.fillStyle = 'rgba(225, 225, 255, 0.5)';
+        } else {
+            context.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        }
+        context.fillText(text, x, y + (fontSize * (i - story.length / 2) + (spacing * (i - story.length / 2))));
+    }
 };
 
 function drawLeaderboard() {
-    context.strokeStyle = 'white';
-    context.fillStyle = 'rgba(0, 22, 52, 1)';
+
+};
+
+function drawHearts() {
+    context.fillStyle = 'rgba(255, 255, 255, 1)';
+    context.font = '12px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText('Health:', 65, 18);
+    for (let i = 1; i <= player.life; i++) {
+        let x = (border * i) / 1.5 + 70;
+        context.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        context.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        context.beginPath();
+        context.arc(x, 22, 5, Math.PI * 2, false);
+        context.fill();
+        context.stroke();
+        context.beginPath();
+        context.arc(x - 7, 14, 5, Math.PI * 2, false);
+        context.fill();
+        context.stroke();
+        context.beginPath();
+        context.arc(x + 7, 14, 5, Math.PI * 2, false);
+        context.fill();
+        context.stroke();
+    }
+};
+
+function drawBeams() {
+    context.fillStyle = 'rgba(255, 255, 255, 1)';
+    context.font = '12px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText('Beams:', 230, 18);
+    for (let i = 1; i <= player.beams; i++) {
+        let x = (border * i) / 1.5 + 240;
+        context.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        context.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        context.beginPath();
+        context.arc(x, 17, 10, Math.PI * 2, false);
+        context.fill();
+        context.stroke();
+        context.fillStyle = 'rgba(0, 22, 52, 1)';
+        context.beginPath();
+        context.arc(x, 17, 5, Math.PI * 2, false);
+        context.fill();
+        context.stroke();
+    }
+};
+
+function drawScore() {
+    context.fillStyle = 'rgba(255, 255, 255, 1)';
+    context.textAlign = 'left';
+    context.textBaseline = 'middle';
+    context.font = '12px Arial';
+    context.fillText('Score:', 375, 18);
+    context.font = 'bold 20px Arial';
+    context.fillText(score, 420, 18);
+};
+
+function drawGG() {
+    context.shadowBlur = 15;
+    context.fillStyle = 'rgba(10, 32, 62, 1)';
     context.beginPath();
-    context.arc(canvas.width / 2, canvas.height / 2, 270, Math.PI * 2, false);
-    context.stroke();
+    context.arc(canvas.width / 2, canvas.height / 2, 300, Math.PI * 2 , false);
     context.fill();
+    context.shadowBlur = 0;
+
+    context.fillStyle = 'rgba(255, 255, 255, 1)';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.font = 'bold 70px Arial';
+    context.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 70);
+    context.textAlign = 'center';
+    context.font = '30px Arial';
+    context.fillText('Your Score : ' + score, canvas.width / 2, canvas.height / 2 + 20);
+    context.font = '20px Arial';
+    context.fillText(score > getHighScorer().score ? 'New High Score!!!' : 'Highest Score : ' + getHighScorer().score, canvas.width / 2, canvas.height / 2 + 60);
+    context.font = '30px Arial';
+    context.fillText('Your Name : ' + name, canvas.width / 2, canvas.height / 2 + 130);
+    if (name.length) {
+        context.font = '12px Arial';
+        context.fillText('Back', goal.x, goal.y + goal.radius + 10);
+    }
 };
 
 //////////////////////////////////////////////////////////////////////////////// main loop
@@ -276,88 +389,45 @@ function render() {
     context.shadowBlur = 15;
     for (let i = 0; i < 100; i++) {
         context.beginPath();
-        context.arc(randomBetween(0, canvas.width), randomBetween(0, canvas.height), randomBetween(1, 5), Math.PI * 2, false);
+        context.arc(randomBetween(0, canvas.width), randomBetween(0, canvas.height), randomBetween(1, 15), Math.PI * 2, false);
         context.fill();
     }
     context.shadowBlur = 0;
 
     if (isGG) {
-        context.fillStyle = 'rgba(255, 255, 255, 1)';
-        context.textAlign = 'center';
-        context.textBaseline = 'middle';
-        context.font = 'bold 80px Arial';
-        context.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 70);
-        context.textAlign = 'center';
-        context.font = '30px Arial';
-        context.fillText('Your Score : ' + score, canvas.width / 2, canvas.height / 2 + 20);
-        context.font = '20px Arial';
-        context.fillText(score > getHighScorer().score ? 'New High Score!!!' : 'Highest Score : ' + getHighScorer().score, canvas.width / 2, canvas.height / 2 + 70);
-        context.font = '30px Arial';
-        context.fillText('Your Name : ' + name, canvas.width / 2, canvas.height / 2 + 200);
-        if (name.length) {
-            context.font = '12px Arial';
-            context.fillText('Back', goal.x, goal.y + goal.radius + 10);
-        }
+        drawGG();
     } else if (!isPlaying) {
-        drawMainMenuStuff();
-        playButton.draw();
-        instructionButton.draw();
-        leaderButton.draw();
-        if (showInstruction) {
+        drawTitle();
+        playButton.update().draw();
+        instructionButton.update().draw();
+        leaderButton.update().draw();
+        randButton.update().draw();
+        if ((showInstruction || showLeaderBoard) && panelRadius < canvas.height / 2 + 150) { // panel circle logic
+            panelRadius += (panelRaiudMax) / 10;
+            if (panelRadius >= panelRaiudMax) {
+                panelRadius = panelRaiudMax;
+            }
+        } else if (!showInstruction && !showLeaderBoard && panelRadius > 0) {
+            panelRadius -= (panelRaiudMax) / 10;
+            if (panelRadius <= 0) {
+                panelRadius = 0;
+            }
+        }
+        drawPanel();
+        if (showInstruction && panelRadius == panelRaiudMax) {
             drawInstructions();
-        } else if (showLeaderBoard) {
+        } else if (showLeaderBoard && panelRadius == panelRaiudMax) {
             drawLeaderboard();
         }
     } else {
-        drawBorders();
-        for (let particle of particles) {// draw particles
+        for (let particle of particles) { // draw particles
             particle.update().draw();
         }
+        drawBorders();
         drawParticleConnectionLines();
-        context.fillStyle = 'rgba(255, 255, 255, 1)'; // draw life points
-        context.font = '12px Arial';
-        context.textAlign = 'center';
-        context.textBaseline = 'middle';
-        context.fillText('Health:', 65, 18);
-        for (let i = 1; i <= player.life; i++) { // draw hearts
-            let x = (border * i) / 1.5 + 70;
-            context.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            context.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            context.beginPath();
-            context.arc(x, 22, 5, Math.PI * 2, false);
-            context.fill();
-            context.stroke();
-            context.beginPath();
-            context.arc(x - 7, 14, 5, Math.PI * 2, false);
-            context.fill();
-            context.stroke();
-            context.beginPath();
-            context.arc(x + 7, 14, 5, Math.PI * 2, false);
-            context.fill();
-            context.stroke();
-        }
-        context.fillText('Beams:', 230, 18);
-        for (let i = 1; i <= player.beams; i++) { // draw beams
-            let x = (border * i) / 1.5 + 240;
-            context.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            context.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            context.beginPath();
-            context.arc(x, 17, 10, Math.PI * 2, false);
-            context.fill();
-            context.stroke();
-            context.fillStyle = 'rgba(0, 22, 52, 1)';
-            context.beginPath();
-            context.arc(x, 17, 5, Math.PI * 2, false);
-            context.fill();
-            context.stroke();
-        }
-        context.fillStyle = 'rgba(255, 255, 255, 1)'; // draw score
-        context.textAlign = 'left';
-        context.textBaseline = 'middle';
-        context.font = '12px Arial';
-        context.fillText('Score:', 375, 18);
-        context.font = 'bold 20px Arial';
-        context.fillText(score, 420, 18);
+        drawHearts();
+        drawBeams();
+        drawScore();
         if (player.life <= 0) { // handle when player life hits zero
             isPlaying = false;
             isGG = true;
@@ -398,7 +468,7 @@ function Player() {
         this.x += (this.destinationX - this.x) / 2;
         this.y += (this.destinationY - this.y) / 2;
         for (let i = 0; i < particles.length; i++) {
-            if (getHypothenuse(this.x, this.y, particles[i].x, particles[i].y) < this.radius + particles[i].radius && !godMode) {
+            if (!godMode && isPlaying && getHypothenuse(this.x, this.y, particles[i].x, particles[i].y) < this.radius + particles[i].radius) {
                 this.life--;
                 particles.splice(i, 1);
             }
@@ -427,7 +497,11 @@ function Goal() {
     this.speed = randomBetween(3, 7);
     this.angle = randomBetween(0, 360);
     this.reposition = function() {
-        this.x = randomBetween(border, canvas.width - border);
+        if (this.x < canvas.width / 2) {
+            this.x = randomBetween(canvas.width / 2, canvas.width - border);
+        } else {
+            this.x = randomBetween(border, canvas.width / 2);
+        }
         this.y = randomBetween(border, canvas.height - border);
         if (isPlaying) {
             score++;
@@ -514,11 +588,23 @@ function Particle() {
 
 function Button(x, y, r, type) {
     this.x = x;
+    const originalX = this.x;
     this.y = y;
     this.radius = r;
     this.type = type;
     this.isHit = function() {
+        if (this.type == 'play' && (showInstruction || showLeaderBoard)) {
+            return false;
+        }
         return getHypothenuse(this.x, this.y, player.x, player.y) < this.radius;
+    };
+    this.isLight = function() {
+        if (this.type == 'instruction' && showInstruction) {
+            return true;
+        } else if (this.type == 'leader' && showLeaderBoard) {
+            return true;
+        }
+        return false;
     };
     this.drawCutomType = function() {
         context.fillStyle = `rgba(255, 255 ,255 , ${this.isHit() ? 1 : 0.4})`;
@@ -535,8 +621,15 @@ function Button(x, y, r, type) {
             context.font = 'bold 33px Arial';
             context.textAlign = 'center';
             context.textBaseline = 'middle';
-            context.fillText('?', this.x, this.y + 3);
-            context.strokeText('?', this.x, this.y + 3);
+            context.fillText('?', this.x, this.y - 2);
+            context.strokeText('?', this.x, this.y - 2);
+            context.font = 'bold 20px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText('?', this.x + 12, this.y + 6);
+            context.strokeText('?', this.x + 12, this.y + 6);
+            context.fillText('?', this.x - 12, this.y + 6);
+            context.strokeText('?', this.x - 12, this.y + 6);
         } else if (this.type == 'leader') {
             context.fillRect(this.x - 6 , this.y + 12, 12, 1);
             context.fillRect(this.x - 1 , this.y + 4 , 2 , 8);
@@ -546,8 +639,11 @@ function Button(x, y, r, type) {
             context.fillRect(this.x - 7 , this.y - 10, 14, 2);
             context.fillRect(this.x - 9 , this.y - 14, 18, 3);
             context.strokeRect(this.x - 6 , this.y + 12, 12, 1);
+            context.strokeRect(this.x - 1 , this.y + 4 , 2 , 8);
             context.strokeRect(this.x - 5 , this.y + 2 , 10, 1);
+            context.strokeRect(this.x - 7 , this.y - 1 , 14, 1);
             context.strokeRect(this.x - 9 , this.y - 8 , 18, 5);
+            context.strokeRect(this.x - 7 , this.y - 10, 14, 2);
             context.strokeRect(this.x - 9 , this.y - 14, 18, 3);
             context.beginPath();
             context.arc(this.x - 11, this.y - 6, 4, Math.PI * 2, false);
@@ -557,10 +653,14 @@ function Button(x, y, r, type) {
             context.stroke();
         }
     };
+    this.update = function() {
+        this.x = originalX + panelRadius;
+        return this;
+    }
     this.draw = function() {
         context.shadowColor = 'white';
-        context.shadowBlur = this.isHit() ? 15 : 0;
-        context.lineWidth = 3;
+        context.shadowBlur = this.isHit() || this.isLight() ? 15 : 0;
+        context.lineWidth = this.isHit() || this.isLight() ? 10 : 3;
         context.strokeStyle = `rgba(255, 255 ,255 , ${this.isHit() ? 1 : 0.6})`;
         context.fillStyle = '#001634';
         context.beginPath();
@@ -606,9 +706,19 @@ canvas.addEventListener('mousedown', function() {
 
 canvas.addEventListener('click', function() {
     if (!isPlaying) {
-        if (showInstruction || showLeaderBoard) {
-            showInstruction = false;
+        // if (showInstruction || showLeaderBoard) {
+        //     showLeaderBoard = false;
+        //     showInstruction = false;
+        //     return;
+        // }
+        if (instructionButton.isHit()) {
             showLeaderBoard = false;
+            showInstruction = !showInstruction;
+            return;
+        }
+        if (leaderButton.isHit()) {
+            showInstruction = false;
+            showLeaderBoard = !showLeaderBoard;
             return;
         }
         if (playButton.isHit()) {
@@ -616,14 +726,6 @@ canvas.addEventListener('click', function() {
             goal.x = canvas.width - 200;
             goal.y = canvas.height / 2;
             name = latestPlayer;
-            return;
-        }
-        if (instructionButton.isHit()) {
-            showInstruction = true;
-            return;
-        }
-        if (leaderButton.isHit()) {
-            showLeaderBoard = true;
             return;
         }
     }
@@ -637,7 +739,12 @@ window.addEventListener('keydown', function(e) {
         name.pop();
         name = name.join('');
     } else if (e.key == 'Escape') {
-        godMode = true;
+        if (isPlaying) {
+            godMode = true;
+        } else {
+            showInstruction = false;
+            showLeaderBoard = false;
+        }
     }
 });
 
@@ -647,28 +754,10 @@ window.addEventListener('keyup', function(e) {
 
 //////////////////////////////////////////////////////////////////////////////// draw functions
 
-// There was once two quantumly entangled particles which can only get close to each other but may never meet as they are cosmically destined to stay away from each other.
-//
-// All the Quantum Universe's a stage, these two particles merely are players, but dance forever in unison.
-//
-// This is a story about our particle, forever seeking a way back to its unique partner.
-//
-// Our particle can seemingly sense its partner particle's relative space-time coordinate,
-// however, its partner particle is always moving from one point in space to another,
-// thus, making it more difficult for our particle to reunite with its partner particle.
-// ( Click to activate quantum beam [.], this beam points to your destined pair )
-// ( You have a max quantum beam charge of 3 )
-//
-// Other particles effortlessly bond with others, but not our particle.
-// Our particle's attributes are so unique, rare, and inharmonious to other particles' vibrations,
-// that just getting minimal contact with another particle could crush that particle to its most basic level before disappearing.
-// Getting in contact with another particle could hurt both particles.
-// ( Avoid getting in contact with other particles. Colliding with other particles will reduce your HP: <3)
-//
-// Only one particle in existence can withstand and match our particle's unique vibration, our particle's destined pair.
-// Our pair particle is strong enough to not get crushed when getting in contact with our particle,
-// in fact, it even empowers our particle, recharging its energy, but by doing this, it reduces its energy to the level that it can't
-// handle our particle's vibrations, our pair particle should relocate. It knows that staying won't do any good. It must... move away.
-// To restore its energy levels and regain its original vibration.
-// Until they meet again.
-// ( Getting in contact with you pair particle increases your score and recharges your quantum beam charge to 3, then teleports to another location )
+// countdown
+// instructions
+// showLeaderBoard
+// background texture
+// player hit indicator
+// particle count logic
+// gg name cursor
