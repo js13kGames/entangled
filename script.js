@@ -9,7 +9,7 @@ canvas.height = window.innerHeight;
 let player = new Player();
 let goal = new Goal();
 let particles = [];
-let particlesCount = 150;
+let particlesCount = getParticleCount();
 for (let i = 0; i < particlesCount; i++) {
     particles.push(new Particle());
 }
@@ -42,9 +42,28 @@ if (!latestPlayer) {
     latestPlayer = '';
 }
 
+//////////////////////////////////////////////////////////////////////////////// initialize background texture
+
+context.fillStyle = 'rgba(0, 22, 52, 1)';
+context.fillRect(0, 0, canvas.width, canvas.height);
+context.fillStyle = 'rgba(255, 255, 255, 0.02)';
+context.shadowColor = 'white';
+context.shadowBlur = 15;
+for (let i = 0; i < 5000; i++) {
+    let radius = randomBetween(1, 15);
+    let x = randomBetween(0, canvas.width);
+    let y = randomBetween(0, canvas.height);
+    context.beginPath();
+    context.arc(x, y, radius, Math.PI * 2, false);
+    context.fill();
+}
+context.shadowBlur = 0;
+let backgroundImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
 //////////////////////////////////////////////////////////////////////////////// support functions
 
 function reInitialize() {
+    particlesCount = getParticleCount();
     isPlaying = false;
     isGG = false;
     showInstruction = false;
@@ -52,13 +71,15 @@ function reInitialize() {
     panelRadius = 0;
     score = 0;
     particles = [];
-    for (let i = 0; i < particlesCount; i++) {
-        particles.push(new Particle());
-    }
+    for (let i = 0; i < particlesCount; i++) particles.push(new Particle());
     player.life = 3;
     player.beams = 3;
     name = '';
-}
+};
+
+function getParticleCount() {
+    return (canvas.width + canvas.height) / 12;
+};
 
 function randomBetween(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
@@ -71,11 +92,15 @@ function getHypothenuse(x1, y1, x2, y2) {
 };
 
 function saveGameRecord() {
-    scoreRecords.unshift({name, score});
-    localStorage.setItem('leaderboard', JSON.stringify(scoreRecords));
-    scoreRecords = JSON.parse(localStorage.getItem('leaderboard'));
-    localStorage.setItem('latestPlayer', name);
-    latestPlayer = localStorage.getItem('latestPlayer');
+    if (score > 0) {
+        scoreRecords.unshift({name, score});
+        scoreRecords.sort((a, b) => a.score > b.score ? -1 : 1);
+        scoreRecords = scoreRecords.splice(0, 20);
+        localStorage.setItem('leaderboard', JSON.stringify(scoreRecords));
+        scoreRecords = JSON.parse(localStorage.getItem('leaderboard'));
+        localStorage.setItem('latestPlayer', name);
+        latestPlayer = localStorage.getItem('latestPlayer');
+    }
 };
 
 function getHighScorer() {
@@ -86,8 +111,24 @@ function getHighScorer() {
 //////////////////////////////////////////////////////////////////////////////// draw functions
 
 function clearCanvas() {
-    context.fillStyle = 'rgba(0, 22, 52, 1)';
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    // context.fillStyle = 'rgba(0, 22, 52, 0.8)';
+    // context.fillRect(0, 0, canvas.width, canvas.height);
+    context.putImageData(backgroundImageData, 0, 0); // draw image data
+    drawRandomParticles();
+};
+
+function drawRandomParticles() {
+    context.fillStyle = 'rgba(255, 255, 255, 0.02)';
+    context.shadowColor = 'white';
+    context.shadowBlur = 15;
+    for (let i = 0; i < 100; i++) {
+        let x = randomBetween(0, canvas.width);
+        let y = randomBetween(0, canvas.height);
+        context.beginPath();
+        context.arc(x, y, randomBetween(5, 10), Math.PI * 2, false);
+        context.fill();
+    }
+    context.shadowBlur = 0;
 };
 
 function drawBorders() {
@@ -109,7 +150,7 @@ function drawParticleConnectionLines() {
             let p2 = particles[j];
             let hyp = getHypothenuse(p1.x, p1.y, p2.x, p2.y);
             let dist = p1.radius + p2.radius + player.radius * 2 + 10;
-            if (hyp < dist) {
+            if (hyp < dist && hyp > 10) {
                 context.beginPath();
                 context.moveTo(p1.x, p1.y);
                 context.lineTo(p2.x, p2.y);
@@ -237,6 +278,8 @@ function drawPanel() {
 
 function drawInstructions() {
     let story = [
+        'Entangled',
+        '',
         'There was once two quantumly entangled particles',
         'which can only get close to each other but may never meet',
         'as they are cosmically destined to stay away from each other.',
@@ -249,16 +292,16 @@ function drawInstructions() {
         'Our particle can seemingly sense its partner particle\'s relative space-time coordinate,',
         'however, its partner particle is always moving from one point in space to another,',
         'thus, making it more difficult for our particle to reunite with its partner particle.',
-        '[[[ Click to activate quantum beam [.], this beam points to your destined pair ]]]',
-        '[[[ You have a max quantum beam charge of 3 ]]]',
+        '! The Quantum Beam points to your destined pair. Click to activate Quantum Beam :',
+        '! You have a max quantum beam charge of 3',
         '',
         'Other particles effortlessly bond with others, but not our particle.',
         'Our particle\'s attributes are so unique, rare, and inharmonious',
         'to other particles\' vibrations, that just getting minimal contact with another particle',
         'could crush that particle to its most basic level before disappearing.',
         'Getting in contact with another particle could hurt both particles.',
-        '[[[ Avoid getting in contact with other particles. ]]]',
-        '[[[ Colliding with other particles will reduce your HP: <3 ]]]',
+        '! Avoid getting in contact with other particles.',
+        '! Colliding with other particles will reduce your HP :',
         '',
         'Only one particle in existence can withstand and match our particle\'s',
         'unique vibration, our particle\'s destined pair.',
@@ -269,31 +312,137 @@ function drawInstructions() {
         'handle our particle\'s vibrations, our pair particle should relocate.',
         'It knows that staying won\'t do any good. It must... move away. To restore its ',
         'energy levels and regain its original vibration. Until they meet again.',
-        '[[[ Getting in contact with you pair particle increases your score and recharges',
-        'your quantum beam charge to 3, then teleports to another location ]]]'
+        '! Getting in contact with you pair particle increases your score and recharges',
+        '! your quantum beam charge to 3, then teleports to another location'
     ];
 
     let x = 50;
     let y = canvas.height / 2;
-    let fontSize = 13;
-    let spacing = 7;
-    context.textAlign = 'left';
-    context.font = `bold ${fontSize}px Arial`;
-    // context.textBaseline = 'middle';
-
     for (let i = 0; i < story.length; i++) {
         let text = story[i];
-        if (text[0] == '[' || text[text.length - 1] == ']') {
-            context.fillStyle = 'rgba(225, 225, 255, 0.5)';
-        } else {
-            context.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        let fontSize = 14;
+        let spacing = 8;
+        context.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        context.textAlign = 'left';
+        context.textBaseline = 'middle';
+        context.font = `bold ${fontSize}px Arial`;
+        if (text == 'Entangled') {
+            context.font = `bold 30px Arial`;
+        } else if (text[0] == '!') {
+            context.fillStyle = 'rgba(225, 225, 255, 0.3)';
         }
-        context.fillText(text, x, y + (fontSize * (i - story.length / 2) + (spacing * (i - story.length / 2))));
+        let tempY = y + (fontSize * (i - story.length / 2) + (spacing * (i - story.length / 2)));
+        context.fillText(text, x, tempY);
+        if (text.indexOf('HP') > -1) {
+            context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            context.beginPath();
+            context.arc(x + context.measureText(text).width + 21, tempY + 2, 5, Math.PI * 2, false);
+            context.fill();
+            context.beginPath();
+            context.arc(x + context.measureText(text).width + 13, tempY - 6, 5, Math.PI * 2, false);
+            context.fill();
+            context.beginPath();
+            context.arc(x + context.measureText(text).width + 28, tempY - 6, 5, Math.PI * 2, false);
+            context.fill();
+        } else if (text.indexOf('Click') > -1) {
+            context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            context.beginPath();
+            context.arc(x + context.measureText(text).width + 17, tempY, 10, Math.PI * 2, false);
+            context.fill();
+            context.fillStyle = 'rgba(0, 22, 52, 1)';
+            context.beginPath();
+            context.arc(x + context.measureText(text).width + 17, tempY, 5, Math.PI * 2, false);
+            context.fill();
+        }
     }
 };
 
 function drawLeaderboard() {
+    let x = 350;
+    let y = canvas.height / 2;
+    if (!scoreRecords.length) {
+        let logoX = x - 50; // draw trophy
+        let logoY = y;
+        context.shadowColor = 'white';
+        context.shadowBlur = 15;
+        context.lineWidth = 5;
+        context.strokeStyle = `rgba(255, 255 ,255 , 1)`;
+        context.fillStyle = '#001634';
+        context.beginPath();
+        context.arc(logoX, logoY, 30, Math.PI * 2, false);
+        context.stroke();
+        context.shadowBlur = 0;
+        context.lineWidth = 1;
+        context.strokeRect(logoX - 6 , logoY + 12, 12, 1);
+        context.strokeRect(logoX - 1 , logoY + 4 , 2 , 8);
+        context.strokeRect(logoX - 5 , logoY + 2 , 10, 1);
+        context.strokeRect(logoX - 7 , logoY - 1 , 14, 1);
+        context.strokeRect(logoX - 9 , logoY - 8 , 18, 5);
+        context.strokeRect(logoX - 7 , logoY - 10, 14, 2);
+        context.strokeRect(logoX - 9 , logoY - 14, 18, 3);
+        context.beginPath();
+        context.arc(logoX - 11, logoY - 6, 4, Math.PI * 2, false);
+        context.stroke();
+        context.beginPath();
+        context.arc(logoX + 11, logoY - 6, 4, Math.PI * 2, false);
+        context.stroke();
+        context.fillStyle = 'rgba(255, 255, 255, 1)';
+        context.textBaseline = 'middle';
+        context.textAlign = 'left';
+        context.font = `20px Arial`;
+        context.fillText('No scores yet...', x, y);
+        return;
+    }
+    for (let i = 0; i < scoreRecords.length; i++) {
+        let scoreRecord = scoreRecords[i];
+        let fontSize = 12;
+        let spacing = 8;
+        let tempFontSize = fontSize;
+        if (i == 0) {
+            tempFontSize = 25;
+            spacing = 15;
+        } else if (i == 1) {
+            tempFontSize = 18;
+            spacing = 12;
+        } else if (i == 2) {
+            tempFontSize = 18;
+            spacing = 12;
+        }
+        context.font = `${i < 3 ? 'bold' : ''} ${tempFontSize}px Arial`;
+        if (i == 0) { // draw crown
+            let logoX = x + context.measureText(scoreRecord.score).width + 30;
+            let logoY = y + (fontSize * (i - scoreRecords.length / 2) + (spacing * (i - scoreRecords.length / 2))) - 3;
+            context.shadowColor = 'white';
+            context.shadowBlur = 15;
+            context.lineWidth = 2;
+            context.strokeStyle = `rgba(255, 255 ,255 , 1)`;
+            context.fillStyle = '#001634';
+            context.beginPath();
+            context.arc(logoX, logoY, 16, Math.PI * 2, false);
+            context.stroke();
+            context.shadowBlur = 0;
+            context.lineWidth = 1;
+            context.beginPath();
+            context.moveTo(logoX - 7, logoY + 8);
+            context.lineTo(logoX - 9, logoY - 6);
+            context.lineTo(logoX - 4, logoY - 0);
+            context.lineTo(logoX - 0, logoY - 6);
+            context.lineTo(logoX + 4, logoY - 0);
+            context.lineTo(logoX + 9, logoY - 6);
+            context.lineTo(logoX + 7, logoY + 8);
+            context.lineTo(logoX - 7, logoY + 8);
+            context.moveTo(logoX - 7, logoY + 5);
+            context.lineTo(logoX + 7, logoY + 5);
+            context.stroke();
+        }
 
+        context.fillStyle = 'rgba(255, 255, 255, 1)';
+        context.textBaseline = i < 3 ? 'middle' : 'top';
+        context.textAlign = 'right';
+        context.fillText(scoreRecord.name + ' : ', x, y + (fontSize * (i - scoreRecords.length / 2) + (spacing * (i - scoreRecords.length / 2))));
+        context.textAlign = 'left';
+        context.fillText(scoreRecord.score, x, y + (fontSize * (i - scoreRecords.length / 2) + (spacing * (i - scoreRecords.length / 2))));
+    }
 };
 
 function drawHearts() {
@@ -330,16 +479,13 @@ function drawBeams() {
     for (let i = 1; i <= player.beams; i++) {
         let x = (border * i) / 1.5 + 240;
         context.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        context.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         context.beginPath();
         context.arc(x, 17, 10, Math.PI * 2, false);
         context.fill();
-        context.stroke();
         context.fillStyle = 'rgba(0, 22, 52, 1)';
         context.beginPath();
         context.arc(x, 17, 5, Math.PI * 2, false);
         context.fill();
-        context.stroke();
     }
 };
 
@@ -372,7 +518,7 @@ function drawGG() {
     context.font = '20px Arial';
     context.fillText(score > getHighScorer().score ? 'New High Score!!!' : 'Highest Score : ' + getHighScorer().score, canvas.width / 2, canvas.height / 2 + 60);
     context.font = '30px Arial';
-    context.fillText('Your Name : ' + name, canvas.width / 2, canvas.height / 2 + 130);
+    context.fillText((!name ? 'Your Name : _' : 'Your Name : ') + name, canvas.width / 2, canvas.height / 2 + 130);
     if (name.length) {
         context.font = '12px Arial';
         context.fillText('Back', goal.x, goal.y + goal.radius + 10);
@@ -383,16 +529,6 @@ function drawGG() {
 
 function render() {
     clearCanvas();
-
-    context.fillStyle = 'rgba(255, 255, 255, 0.06)';
-    context.shadowColor = 'white';
-    context.shadowBlur = 15;
-    for (let i = 0; i < 100; i++) {
-        context.beginPath();
-        context.arc(randomBetween(0, canvas.width), randomBetween(0, canvas.height), randomBetween(1, 15), Math.PI * 2, false);
-        context.fill();
-    }
-    context.shadowBlur = 0;
 
     if (isGG) {
         drawGG();
@@ -464,25 +600,34 @@ function Player() {
     this.life = 3;
     this.beams = 3;
     this.auraOpacity = 0;
+    this.hitOpacity = 0;
+    this.goalOpacity = 0;
     this.update = function() {
+        this.hitOpacity -= this.hitOpacity > 0 ? 0.015 : 0;
+        this.goalOpacity -= this.goalOpacity > 0 ? 0.015 : 0;
         this.x += (this.destinationX - this.x) / 2;
         this.y += (this.destinationY - this.y) / 2;
         for (let i = 0; i < particles.length; i++) {
             if (!godMode && isPlaying && getHypothenuse(this.x, this.y, particles[i].x, particles[i].y) < this.radius + particles[i].radius) {
                 this.life--;
                 particles.splice(i, 1);
+                this.hitOpacity = 0.5;
             }
         }
         this.auraOpacity -= 0.02;
         return this;
     };
     this.draw = function() {
+        context.fillStyle = `rgba(200, 20, 20, ${this.hitOpacity})`;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = `rgba(200, 200, 200, ${this.goalOpacity})`;
+        context.fillRect(0, 0, canvas.width, canvas.height);
         context.shadowColor = 'white';
         context.shadowBlur = this.auraOpacity > 0 ? 100 * this.auraOpacity : 0;
-        context.beginPath();
-        context.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
         context.fillStyle = `rgba(255, 255, 255, ${this.auraOpacity > 0 ? 1 : 0.5})`;
         context.strokeStyle = 'white';
+        context.beginPath();
+        context.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
         context.fill();
         context.stroke();
         context.shadowBlur = 0;
@@ -506,6 +651,7 @@ function Goal() {
         if (isPlaying) {
             score++;
             player.beams = 3;
+            player.goalOpacity = 0.5;
         }
     };
     this.update = function() {
@@ -705,12 +851,7 @@ canvas.addEventListener('mousedown', function() {
 });
 
 canvas.addEventListener('click', function() {
-    if (!isPlaying) {
-        // if (showInstruction || showLeaderBoard) {
-        //     showLeaderBoard = false;
-        //     showInstruction = false;
-        //     return;
-        // }
+    if (!isPlaying)
         if (instructionButton.isHit()) {
             showLeaderBoard = false;
             showInstruction = !showInstruction;
@@ -752,12 +893,18 @@ window.addEventListener('keyup', function(e) {
     godMode = false;
 });
 
-//////////////////////////////////////////////////////////////////////////////// draw functions
+window.addEventListener('resize', function() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    player.x = 200;
+    player.y = canvas.height / 2;
+    goal.x = canvas.width - 200;
+    goal.y = canvas.height / 2;
+    playButton = new Button(280, canvas.height / 2, 50, 'play');
+    instructionButton = new Button(280 - 67, canvas.height / 2 - 67, 30, 'instruction');
+    leaderButton = new Button(280 + 67, canvas.height / 2 + 67, 30, 'leader');
+    randButton = new Button(200, canvas.height / 2, 15, 'random');
+    reInitialize();
+});
 
-// countdown
-// instructions
-// showLeaderBoard
-// background texture
-// player hit indicator
-// particle count logic
-// gg name cursor
+////////////////////////////////////////////////////////////////////////////////
