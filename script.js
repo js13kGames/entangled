@@ -13,6 +13,8 @@ let particlesCount = getParticleCount();
 for (let i = 0; i < particlesCount; i++) {
     particles.push(new Particle());
 }
+let frostParticle = new FrostParticle();
+let phantomParticle = new PhantomParticle();
 
 let playButton = new Button(280, canvas.height / 2, 50, 'play');
 let instructionButton = new Button(280 - 67, canvas.height / 2 - 67, 30, 'instruction');
@@ -73,8 +75,11 @@ function reInitialize() {
     particles = [];
     for (let i = 0; i < particlesCount; i++) particles.push(new Particle());
     player.life = 3;
-    player.beams = 3;
+    player.beams = 5;
+    goal.showHeart = false;
     name = '';
+    frostParticle = new FrostParticle();
+    phantomParticle = new PhantomParticle();
 };
 
 function getParticleCount() {
@@ -151,10 +156,16 @@ function drawParticleConnectionLines() {
             let hyp = getHypothenuse(p1.x, p1.y, p2.x, p2.y);
             let dist = p1.radius + p2.radius + player.radius * 2 + 10;
             if (hyp < dist && hyp > 10) {
+                if (p1.isRed || p2.isRed) {
+                    p1.isRed = true;
+                    p2.isRed = true;
+                    context.strokeStyle = `rgba(255, 70, 70, ${(dist - hyp) / 20})`;
+                } else {
+                    context.strokeStyle = `rgba(255, 255, 255, ${(dist - hyp) / 20})`;
+                }
                 context.beginPath();
                 context.moveTo(p1.x, p1.y);
                 context.lineTo(p2.x, p2.y);
-                context.strokeStyle = `rgba(255, 255, 255, ${(dist - hyp) / 20})`;
                 context.stroke();
             }
         }
@@ -292,8 +303,8 @@ function drawInstructions() {
         'Our particle can seemingly sense its partner particle\'s relative space-time coordinate,',
         'however, its partner particle is always moving from one point in space to another,',
         'thus, making it more difficult for our particle to reunite with its partner particle.',
-        '! The Quantum Beam points to your destined pair. Click to activate Quantum Beam :',
-        '! You have a max quantum beam charge of 3',
+        '!beam The Quantum Beam points to your destined pair. Click to activate Quantum Beam : ',
+        '! You have a max quantum beam charge of 5.',
         '',
         'Other particles effortlessly bond with others, but not our particle.',
         'Our particle\'s attributes are so unique, rare, and inharmonious',
@@ -301,7 +312,8 @@ function drawInstructions() {
         'could crush that particle to its most basic level before disappearing.',
         'Getting in contact with another particle could hurt both particles.',
         '! Avoid getting in contact with other particles.',
-        '! Colliding with other particles will reduce your HP :',
+        '! You have a max HP of 3.',
+        '!heart Colliding with other particles will reduce your HP : ',
         '',
         'Only one particle in existence can withstand and match our particle\'s',
         'unique vibration, our particle\'s destined pair.',
@@ -312,48 +324,50 @@ function drawInstructions() {
         'handle our particle\'s vibrations, our pair particle should relocate.',
         'It knows that staying won\'t do any good. It must... move away. To restore its ',
         'energy levels and regain its original vibration. Until they meet again.',
-        '! Getting in contact with you pair particle increases your score and recharges',
-        '! your quantum beam charge to 3, then teleports to another location'
+        '! Getting in contact with you pair particle increases your score and replenish',
+        '! 3 quantum beam charges, then teleports to another location.',
     ];
 
     let x = 50;
     let y = canvas.height / 2;
     for (let i = 0; i < story.length; i++) {
-        let text = story[i];
-        let fontSize = 14;
-        let spacing = 8;
+        let text = story[i].split(' ');
+        let fontSize = 13;
+        let spacing = 5;
         context.fillStyle = 'rgba(255, 255, 255, 0.9)';
         context.textAlign = 'left';
         context.textBaseline = 'middle';
-        context.font = `bold ${fontSize}px Arial`;
-        if (text == 'Entangled') {
-            context.font = `bold 30px Arial`;
-        } else if (text[0] == '!') {
-            context.fillStyle = 'rgba(225, 225, 255, 0.3)';
-        }
+        context.font = `${fontSize}px Arial`;
         let tempY = y + (fontSize * (i - story.length / 2) + (spacing * (i - story.length / 2)));
-        context.fillText(text, x, tempY);
-        if (text.indexOf('HP') > -1) {
+        let measure = context.measureText(text.join(' ')).width;
+        if (text.includes('!heart')) {
             context.fillStyle = 'rgba(255, 255, 255, 0.3)';
             context.beginPath();
-            context.arc(x + context.measureText(text).width + 21, tempY + 2, 5, Math.PI * 2, false);
+            context.arc(x + measure - 23, tempY + 2, 5, Math.PI * 2, false);
             context.fill();
             context.beginPath();
-            context.arc(x + context.measureText(text).width + 13, tempY - 6, 5, Math.PI * 2, false);
+            context.arc(x + measure - 31, tempY - 6, 5, Math.PI * 2, false);
             context.fill();
             context.beginPath();
-            context.arc(x + context.measureText(text).width + 28, tempY - 6, 5, Math.PI * 2, false);
+            context.arc(x + measure - 15, tempY - 6, 5, Math.PI * 2, false);
             context.fill();
-        } else if (text.indexOf('Click') > -1) {
+        } else if (text.includes('!beam')) {
             context.fillStyle = 'rgba(255, 255, 255, 0.3)';
             context.beginPath();
-            context.arc(x + context.measureText(text).width + 17, tempY, 10, Math.PI * 2, false);
+            context.arc(x + measure - 27, tempY, 10, Math.PI * 2, false);
             context.fill();
             context.fillStyle = 'rgba(0, 22, 52, 1)';
             context.beginPath();
-            context.arc(x + context.measureText(text).width + 17, tempY, 5, Math.PI * 2, false);
+            context.arc(x + measure - 27, tempY, 5, Math.PI * 2, false);
             context.fill();
         }
+        if (i == 0) {
+            context.font = `bold 30px Arial`;
+        } else if (text[0][0] == '!') {
+            context.fillStyle = 'rgba(225, 225, 255, 0.3)';
+            text.shift();
+        }
+        context.fillText(text.join(' '), x, tempY);
     }
 };
 
@@ -494,9 +508,10 @@ function drawScore() {
     context.textAlign = 'left';
     context.textBaseline = 'middle';
     context.font = '12px Arial';
-    context.fillText('Score:', 375, 18);
+    context.fillText('Score:', 450, 18);
+    context.textAlign = 'left';
     context.font = 'bold 20px Arial';
-    context.fillText(score, 420, 18);
+    context.fillText(score, 500, 18);
 };
 
 function drawGG() {
@@ -557,10 +572,15 @@ function render() {
         }
     } else {
         for (let particle of particles) { // draw particles
-            particle.update().draw();
+            particle.update();
         }
         drawBorders();
+        frostParticle.update().draw();
+        phantomParticle.update().draw();
         drawParticleConnectionLines();
+        for (let particle of particles) { // draw particles
+            particle.draw();
+        }
         drawHearts();
         drawBeams();
         drawScore();
@@ -598,13 +618,15 @@ function Player() {
     this.destinationX = this.x;
     this.destinationY = this.y;
     this.life = 3;
-    this.beams = 3;
+    this.beams = 5;
     this.auraOpacity = 0;
     this.hitOpacity = 0;
     this.goalOpacity = 0;
+    this.permafrostOpacity = 0;
     this.update = function() {
         this.hitOpacity -= this.hitOpacity > 0 ? 0.015 : 0;
         this.goalOpacity -= this.goalOpacity > 0 ? 0.015 : 0;
+        this.permafrostOpacity -= this.permafrostOpacity > 0 ? 0.01 : 0;
         this.x += (this.destinationX - this.x) / 2;
         this.y += (this.destinationY - this.y) / 2;
         for (let i = 0; i < particles.length; i++) {
@@ -621,6 +643,8 @@ function Player() {
         context.fillStyle = `rgba(200, 20, 20, ${this.hitOpacity})`;
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = `rgba(200, 200, 200, ${this.goalOpacity})`;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = `rgba(120, 120, 200, ${this.permafrostOpacity})`;
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.shadowColor = 'white';
         context.shadowBlur = this.auraOpacity > 0 ? 100 * this.auraOpacity : 0;
@@ -641,6 +665,7 @@ function Goal() {
     this.acceleration = 0.9;
     this.speed = randomBetween(3, 7);
     this.angle = randomBetween(0, 360);
+    this.showHeart = false;
     this.reposition = function() {
         if (this.x < canvas.width / 2) {
             this.x = randomBetween(canvas.width / 2, canvas.width - border);
@@ -650,8 +675,17 @@ function Goal() {
         this.y = randomBetween(border, canvas.height - border);
         if (isPlaying) {
             score++;
-            player.beams = 3;
+            player.beams += 3;
+            if (player.beams > 5) {
+                player.beams = 5;
+            }
             player.goalOpacity = 0.5;
+            if (player.life < 3 && score % 5 == 4) {
+                this.showHeart = true;
+            } else if (this.showHeart) {
+                this.showHeart = false;
+                player.life++;
+            }
         }
     };
     this.update = function() {
@@ -688,6 +722,22 @@ function Goal() {
         context.fill();
         context.stroke();
         context.shadowBlur = 0;
+        if (this.showHeart && isPlaying) {
+            context.fillStyle = 'rgba(0, 22, 52, 0.8)';
+            context.strokeStyle = 'rgba(255, 255, 255, 1)';
+            context.beginPath();
+            context.arc(this.x, this.y + 6, 5, Math.PI * 2, false);
+            context.fill();
+            context.stroke();
+            context.beginPath();
+            context.arc(this.x - 7, this.y - 4, 5, Math.PI * 2, false);
+            context.fill();
+            context.stroke();
+            context.beginPath();
+            context.arc(this.x + 7, this.y - 4, 5, Math.PI * 2, false);
+            context.fill();
+            context.stroke();
+        }
     };
 };
 
@@ -698,39 +748,48 @@ function Particle() {
     this.speed = 15;
     this.acceleration = 0.99;
     this.angle = randomBetween(0, 360);
+    this.isRed = false;
     this.update = function() {
-        this.x += Math.cos(this.angle * Math.PI / 180) * this.speed;
-        this.y += Math.sin(this.angle * Math.PI / 180) * this.speed;
-        this.speed *= this.acceleration;
-        if (this.speed < 0.1) {
-            this.speed = randomBetween(2,7);
-            this.angle = randomBetween(0, 360);
+        if (!frostParticle.permafrost) {
+            this.x += Math.cos(this.angle * Math.PI / 180) * this.speed;
+            this.y += Math.sin(this.angle * Math.PI / 180) * this.speed;
+            this.speed *= this.acceleration;
+            if (this.speed < 0.1) {
+                this.speed = randomBetween(2,7);
+                this.angle = randomBetween(0, 360);
+            }
+            if (this.x - this.radius < 0) {
+                this.x = this.radius;
+                this.angle = 540 - this.angle;
+            }
+            if (this.x + this.radius > canvas.width) {
+                this.x = canvas.width - this.radius;
+                this.angle = 540 - this.angle;
+            }
+            if (this.y + this.radius < 0) {
+                this.y = canvas.height + this.radius;
+            }
+            if (this.y - this.radius > canvas.height) {
+                this.y = 0 - this.radius;
+            }
         }
-        if (this.x - this.radius < 0) {
-            this.x = this.radius;
-            this.angle = 540 - this.angle;
-        }
-        if (this.x + this.radius > canvas.width) {
-            this.x = canvas.width - this.radius;
-            this.angle = 540 - this.angle;
-        }
-        if (this.y + this.radius < 0) {
-            this.y = canvas.height + this.radius;
-        }
-        if (this.y - this.radius > canvas.height) {
-            this.y = 0 - this.radius;
+        if (getHypothenuse(this.x, this.y, phantomParticle.x, phantomParticle.y) > phantomParticle.range + this.radius) {
+            this.isRed = false;
         }
         return this;
     };
     this.draw = function() {
         context.beginPath();
         context.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
-        context.fillStyle = `rgba(255, 255, 255, ${this.speed-0.1})`;
-        context.strokeStyle = '#ffffff';
+        context.fillStyle = `rgba(${this.isRed ? '255, 70, 70' : '255, 255, 255'}, ${this.speed-0.1})`;
+        context.fillStyle = frostParticle.permafrost ? 'skyblue' : context.fillStyle;
+        context.strokeStyle = this.isRed ? 'rgba(255, 70, 70, 0.8)' : 'white';
+        context.strokeStyle = frostParticle.permafrost ? 'rgba(70, 70, 255, 0.8)' : context.strokeStyle;
         context.fill();
         context.stroke();
+        context.lineWidth = 1;
     };
-}
+};
 
 function Button(x, y, r, type) {
     this.x = x;
@@ -817,7 +876,72 @@ function Button(x, y, r, type) {
         this.drawCutomType();
         context.shadowBlur = 0;
     };
-}
+};
+
+function PhantomParticle() {
+    this.x = canvas.width / 3 * 2;
+    this.y = canvas.height / 2;
+    this.radius = 50;
+    this.range = 300;
+    this.update = function() {
+        for (let particle of particles) {
+            if (getHypothenuse(this.x, this.y, particle.x, particle.y) < particle.radius + this.range) {
+                particle.isRed = true;
+            }
+        }
+        return this;
+    };
+    this.draw = function() {
+        context.strokeStyle = 'rgba(255, 70, 70, 0.8)';
+        context.fillStyle = 'rgba(255, 0, 0, 0.2)';
+        context.shadowColor = 'pink';
+        context.shadowBlur = 25;
+        context.lineWidth = 10;
+        context.beginPath();
+        context.arc(this.x, this.y, this.radius, Math.PI * 2, false);
+        context.stroke();
+        context.fill();
+        context.shadowBlur = 0;
+        context.lineWidth = 1;
+        // context.strokeStyle = 'rgba(255, 70, 70, 0.8)'; // draw range
+        // context.beginPath();
+        // context.arc(this.x, this.y, this.range, Math.PI * 2, false);
+        // context.stroke();
+    };
+};
+
+function FrostParticle() {
+    this.x = canvas.width / 3;
+    this.y = canvas.height / 2;
+    this.radius = 50;
+    this.permafrost = false;
+    this.update = function() {
+        if (getHypothenuse(this.x, this.y, player.x, player.y) < this.radius + player.radius && !this.permafrost) {
+            this.permafrost = true;
+            player.permafrostOpacity = 0.7;
+        } else if (this.permafrost) {
+            this.radius -= 0.05;
+            if (this.radius <= 0) {
+                this.radius = 50;
+                this.permafrost = false;
+            }
+        }
+        return this;
+    };
+    this.draw = function() {
+        context.strokeStyle = 'rgba(70, 70, 255, 0.8)';
+        context.fillStyle = 'rgba(0, 0, 255, 0.2)';
+        context.shadowColor = 'skyblue';
+        context.shadowBlur = 25;
+        context.lineWidth = this.radius / 5;
+        context.beginPath();
+        context.arc(this.x, this.y, this.radius, Math.PI * 2, false);
+        context.stroke();
+        context.fill();
+        context.shadowBlur = 0;
+        context.lineWidth = 1;
+    };
+};
 
 //////////////////////////////////////////////////////////////////////////////// events
 
@@ -851,7 +975,7 @@ canvas.addEventListener('mousedown', function() {
 });
 
 canvas.addEventListener('click', function() {
-    if (!isPlaying)
+    if (!isPlaying) {
         if (instructionButton.isHit()) {
             showLeaderBoard = false;
             showInstruction = !showInstruction;
@@ -881,16 +1005,12 @@ window.addEventListener('keydown', function(e) {
         name = name.join('');
     } else if (e.key == 'Escape') {
         if (isPlaying) {
-            godMode = true;
+            godMode = !godMode;
         } else {
             showInstruction = false;
             showLeaderBoard = false;
         }
     }
-});
-
-window.addEventListener('keyup', function(e) {
-    godMode = false;
 });
 
 window.addEventListener('resize', function() {
