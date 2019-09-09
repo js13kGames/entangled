@@ -31,7 +31,7 @@ let godMode = false;
 let score = 0;
 let name = '';
 let panelRadius = 0;
-let panelRaiudMax = canvas.height / 2 + 180;
+let panelRadiusMax = canvas.height / 2 + 180;
 
 let scoreRecords = JSON.parse(localStorage.getItem('leaderboard'));
 if (!scoreRecords) {
@@ -547,34 +547,31 @@ function render() {
         instructionButton.update().draw();
         leaderButton.update().draw();
         randButton.update().draw();
-        if ((showInstruction || showLeaderBoard) && panelRadius < canvas.height / 2 + 150) { // panel circle logic
-            panelRadius += (panelRaiudMax) / 10;
-            if (panelRadius >= panelRaiudMax) {
-                panelRadius = panelRaiudMax;
+        if ((showInstruction || showLeaderBoard) && panelRadius < panelRadiusMax) { // panel circle logic
+            panelRadius += (panelRadiusMax) / 10;
+            if (panelRadius >= panelRadiusMax) {
+                panelRadius = panelRadiusMax;
             }
         } else if (!showInstruction && !showLeaderBoard && panelRadius > 0) {
-            panelRadius -= (panelRaiudMax) / 10;
+            panelRadius -= (panelRadiusMax) / 10;
             if (panelRadius <= 0) {
                 panelRadius = 0;
             }
         }
         drawPanel();
-        if (showInstruction && panelRadius == panelRaiudMax) {
+        if (showInstruction && panelRadius == panelRadiusMax) {
             drawInstructions();
-        } else if (showLeaderBoard && panelRadius == panelRaiudMax) {
+        } else if (showLeaderBoard && panelRadius == panelRadiusMax) {
             drawLeaderboard();
         }
     } else {
         for (let particle of particles) { // draw particles
-            particle.update();
+            particle.update().draw();
         }
         drawBorders();
         frostParticle.update().draw();
         phantomParticle.update().draw();
         drawParticleConnectionLines();
-        for (let particle of particles) { // draw particles
-            particle.draw();
-        }
         drawHearts();
         drawBeams();
         drawScore();
@@ -583,6 +580,7 @@ function render() {
             isGG = true;
             particles = [];
             player.beams = 1;
+            phantomParticle.clearTimeout();
             frostParticle.clearTimeout();
         }
     }
@@ -627,6 +625,9 @@ function Player() {
         for (let i = 0; i < particles.length; i++) {
             if (!godMode && isPlaying && getHypothenuse(this.x, this.y, particles[i].x, particles[i].y) < this.radius + particles[i].radius) {
                 this.life--;
+                if (particles[i].isRed) {
+                    player.life = 0;
+                }
                 particles.splice(i, 1);
                 this.hitOpacity = 0.5;
             }
@@ -768,14 +769,11 @@ function Particle() {
                 this.y = 0 - this.radius;
             }
         }
-        if (getHypothenuse(this.x, this.y, phantomParticle.x, phantomParticle.y) > phantomParticle.range + this.radius) {
-            this.isRed = false;
-        }
         return this;
     };
     this.draw = function() {
         context.beginPath();
-        context.arc(this.x, this.y, this.radius + (this.isRed ? randomBetween(0, 3) : 0), 2 * Math.PI, false);
+        context.arc(this.x, this.y, this.radius + (this.isRed ? randomBetween(0, 15) : 0), 2 * Math.PI, false);
         context.fillStyle = `rgba(${this.isRed ? '255, 70, 70' : '255, 255, 255'}, ${this.speed-0.1})`;
         context.fillStyle = frostParticle.permafrost ? 'skyblue' : context.fillStyle;
         context.strokeStyle = this.isRed ? 'rgba(255, 70, 70, 0.8)' : 'white';
@@ -874,24 +872,76 @@ function Button(x, y, r, type) {
 };
 
 function PhantomParticle() {
-    this.x = canvas.width / 2;
-    this.y = canvas.height / 2;
-    this.radius = 50;
+    this.x = 0;
+    this.y = 0;
+    this.radius = 30;
     this.range = 200;
+    this.timeout = null;
+    this.initializeTimeout = function() {
+        this.timeout = setTimeout(() => {
+            this.active = true;
+        }, 1000 * (30 + randomBetween(0, 90)));
+    };
+    this.clearTimeout = function() {
+        this.reset();
+        clearTimeout(this.timeout);
+    };
+    this.reset = function() {
+        this.active = false;
+        let rand = randomBetween(0, 4);
+        let speedDiv = 1000;
+        if (rand == 0) { // upper left
+            this.x = 0 - this.range * 2 * (canvas.width / canvas.height);
+            this.y = 0 - this.range * 2;
+            this.speedX = canvas.width / speedDiv;
+            this.speedY = canvas.height / speedDiv;
+        } else if (rand == 1) { // upper right
+            this.x = canvas.width + this.range * 2 * (canvas.width / canvas.height);
+            this.y = 0 - this.range * 2;
+            this.speedX = -canvas.width / speedDiv;
+            this.speedY = canvas.height / speedDiv;
+        } else if (rand == 2) { // lower left
+            this.x = 0 - this.range * 2 * (canvas.width / canvas.height);
+            this.y = canvas.height + this.range * 2;
+            this.speedX = canvas.width / speedDiv;
+            this.speedY = -canvas.height / speedDiv;
+        } else if (rand == 3) { // lower right
+            this.x = canvas.width + this.range * 2 * (canvas.width / canvas.height);
+            this.y = canvas.height + this.range * 2;
+            this.speedX = -canvas.width / speedDiv;
+            this.speedY = -canvas.height / speedDiv;
+        }
+    };
+    this.reset();
     this.update = function() {
+        if (this.active) {
+            this.x += this.speedX;
+            this.y += this.speedY;
+        }
+        if (getHypothenuse(this.x, this.y, player.x, player.y) < this.radius + player.radius) {
+            player.life++;
+            if (player.life > 3) {
+                player.life = 3;
+            }
+            this.reset();
+            this.initializeTimeout();
+        } else if ((this.speedY < 0 && this.y < 0 - this.range * 2) || (this.speedY > 0 && this.y > canvas.height + this.range * 2)) {
+            this.reset();
+            this.initializeTimeout();
+        }
         for (let particle of particles) {
             if (getHypothenuse(this.x, this.y, particle.x, particle.y) < particle.radius + this.range) {
                 particle.isRed = true;
             } else {
-                particle.isRed = false;;
+                particle.isRed = false;
             }
         }
         return this;
     };
     this.draw = function() {
-        context.strokeStyle = 'rgba(255, 70, 70, 0.8)';
+        context.strokeStyle = 'pink';
         context.fillStyle = 'rgba(255, 0, 0, 0.2)';
-        context.shadowColor = 'pink';
+        context.shadowColor = 'rgba(255, 70, 70, 0.8)';
         context.shadowBlur = 25;
         context.lineWidth = 10;
         context.beginPath();
@@ -900,6 +950,18 @@ function PhantomParticle() {
         context.fill();
         context.shadowBlur = 0;
         context.lineWidth = 1;
+
+        context.fillStyle = 'pink';
+        context.beginPath();
+        context.arc(this.x, this.y + 10, 8, Math.PI * 2, false);
+        context.fill();
+        context.beginPath();
+        context.arc(this.x - 12, this.y - 3, 8, Math.PI * 2, false);
+        context.fill();
+        context.beginPath();
+        context.arc(this.x + 12, this.y - 3, 8, Math.PI * 2, false);
+        context.fill();
+
     };
 };
 
@@ -910,7 +972,6 @@ function FrostParticle() {
     this.initializeTimeout = function() {
         this.timeout = setTimeout(() => {
             this.active = true;
-            this.initializeTimeout();
         }, 1000 * 60 * 2);
     };
     this.clearTimeout = function() {
@@ -946,16 +1007,18 @@ function FrostParticle() {
             this.radius -= 0.05;
             if (this.radius <= 0) {
                 this.reset();
+                this.initializeTimeout();
             }
         } else if ((this.speedX < 0 && this.x < 0 - this.radius * 3) || (this.speedX > 0 && this.x > canvas.width + this.radius * 3)) {
             this.reset();
+            this.initializeTimeout();
         }
         return this;
     };
     this.draw = function() {
-        context.strokeStyle = 'rgba(70, 70, 255, 0.8)';
+        context.strokeStyle = 'skyblue';
         context.fillStyle = 'rgba(0, 0, 255, 0.2)';
-        context.shadowColor = 'skyblue';
+        context.shadowColor = 'rgba(70, 70, 255, 0.8)';
         context.shadowBlur = 25;
         context.lineWidth = this.radius / 5;
         context.beginPath();
@@ -1015,6 +1078,7 @@ canvas.addEventListener('click', function() {
             goal.x = canvas.width - 200;
             goal.y = canvas.height / 2;
             name = latestPlayer;
+            phantomParticle.initializeTimeout();
             frostParticle.initializeTimeout();
             return;
         }
