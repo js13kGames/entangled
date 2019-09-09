@@ -155,14 +155,8 @@ function drawParticleConnectionLines() {
             let p2 = particles[j];
             let hyp = getHypothenuse(p1.x, p1.y, p2.x, p2.y);
             let dist = p1.radius + p2.radius + player.radius * 2 + 10;
-            if (hyp < dist && hyp > 10) {
-                if (p1.isRed || p2.isRed) {
-                    p1.isRed = true;
-                    p2.isRed = true;
-                    context.strokeStyle = `rgba(255, 70, 70, ${(dist - hyp) / 20})`;
-                } else {
-                    context.strokeStyle = `rgba(255, 255, 255, ${(dist - hyp) / 20})`;
-                }
+            if (hyp < dist && hyp > 10 && !p1.isRed && !p2.isRed) {
+                context.strokeStyle = `rgba(255, 255, 255, ${(dist - hyp) / 20})`;
                 context.beginPath();
                 context.moveTo(p1.x, p1.y);
                 context.lineTo(p2.x, p2.y);
@@ -589,6 +583,7 @@ function render() {
             isGG = true;
             particles = [];
             player.beams = 1;
+            frostParticle.clearTimeout();
         }
     }
 
@@ -780,7 +775,7 @@ function Particle() {
     };
     this.draw = function() {
         context.beginPath();
-        context.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
+        context.arc(this.x, this.y, this.radius + (this.isRed ? randomBetween(0, 3) : 0), 2 * Math.PI, false);
         context.fillStyle = `rgba(${this.isRed ? '255, 70, 70' : '255, 255, 255'}, ${this.speed-0.1})`;
         context.fillStyle = frostParticle.permafrost ? 'skyblue' : context.fillStyle;
         context.strokeStyle = this.isRed ? 'rgba(255, 70, 70, 0.8)' : 'white';
@@ -879,14 +874,16 @@ function Button(x, y, r, type) {
 };
 
 function PhantomParticle() {
-    this.x = canvas.width / 3 * 2;
+    this.x = canvas.width / 2;
     this.y = canvas.height / 2;
     this.radius = 50;
-    this.range = 300;
+    this.range = 200;
     this.update = function() {
         for (let particle of particles) {
             if (getHypothenuse(this.x, this.y, particle.x, particle.y) < particle.radius + this.range) {
                 particle.isRed = true;
+            } else {
+                particle.isRed = false;;
             }
         }
         return this;
@@ -903,28 +900,55 @@ function PhantomParticle() {
         context.fill();
         context.shadowBlur = 0;
         context.lineWidth = 1;
-        // context.strokeStyle = 'rgba(255, 70, 70, 0.8)'; // draw range
-        // context.beginPath();
-        // context.arc(this.x, this.y, this.range, Math.PI * 2, false);
-        // context.stroke();
     };
 };
 
 function FrostParticle() {
-    this.x = canvas.width / 3;
-    this.y = canvas.height / 2;
-    this.radius = 50;
-    this.permafrost = false;
+    this.x = 0 - this.radius * 2;
+    this.y = randomBetween(canvas.height / 2 - 100, canvas.height / 2 + 100);
+    this.timeout = null;
+    this.initializeTimeout = function() {
+        this.timeout = setTimeout(() => {
+            this.active = true;
+            this.initializeTimeout();
+        }, 1000 * 60 * 2);
+    };
+    this.clearTimeout = function() {
+        this.reset();
+        clearTimeout(this.timeout);
+    };
+    this.reset = function() {
+        this.active = false;
+        this.permafrost = false;
+        this.radius = 50;
+        let rand = randomBetween(0, 2);
+        this.y = randomBetween(canvas.height / 2 - 100, canvas.height / 2 + 100);
+        if (rand == 0) {
+            this.x = 0 - this.radius * 2;
+            this.speedX = 2;
+            this.speedY = randomBetween(-30, 31) * 0.01;
+        } else if (rand == 1) {
+            this.x = canvas.width + this.radius * 2;
+            this.speedX = -2;
+            this.speedY = randomBetween(-30, 31) * 0.01;
+        }
+    };
+    this.reset();
     this.update = function() {
+        if (!this.permafrost && this.active) {
+            this.x += this.speedX;
+            this.y += this.speedY;
+        }
         if (getHypothenuse(this.x, this.y, player.x, player.y) < this.radius + player.radius && !this.permafrost) {
             this.permafrost = true;
             player.permafrostOpacity = 0.7;
         } else if (this.permafrost) {
             this.radius -= 0.05;
             if (this.radius <= 0) {
-                this.radius = 50;
-                this.permafrost = false;
+                this.reset();
             }
+        } else if ((this.speedX < 0 && this.x < 0 - this.radius * 3) || (this.speedX > 0 && this.x > canvas.width + this.radius * 3)) {
+            this.reset();
         }
         return this;
     };
@@ -966,11 +990,11 @@ canvas.addEventListener('mousemove', function (e) {
 
 canvas.addEventListener('mousedown', function() {
     player.auraOpacity = 1;
-    if (player.beams > 0) {
+    if (player.beams > 0 && connectionOppacity < 0.1) {
         connectionOppacity = 1;
-    }
-    if (isPlaying && !godMode) {
-        player.beams--;
+        if (isPlaying && !godMode) {
+            player.beams--;
+        }
     }
 });
 
@@ -991,6 +1015,7 @@ canvas.addEventListener('click', function() {
             goal.x = canvas.width - 200;
             goal.y = canvas.height / 2;
             name = latestPlayer;
+            frostParticle.initializeTimeout();
             return;
         }
     }
@@ -1004,12 +1029,9 @@ window.addEventListener('keydown', function(e) {
         name.pop();
         name = name.join('');
     } else if (e.key == 'Escape') {
-        if (isPlaying) {
-            godMode = !godMode;
-        } else {
-            showInstruction = false;
-            showLeaderBoard = false;
-        }
+        godMode = !godMode;
+        showInstruction = false;
+        showLeaderBoard = false;
     }
 });
 
