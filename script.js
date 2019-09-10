@@ -25,7 +25,7 @@ let border = 50;
 let connectionOppacity = 0;
 let isPlaying = false;
 let isGG = false;
-let showInstruction = false;
+let showInstruction = true;
 let showLeaderBoard = false;
 let godMode = false;
 let score = 0;
@@ -285,41 +285,32 @@ function drawInstructions() {
     let story = [
         'Entangled',
         '',
-        'There was once two quantumly entangled particles',
-        'which can only get close to each other but may never meet',
-        'as they are cosmically destined to stay away from each other.',
+        'There was once a pair of quantumly entangled particles that can only get close to each other',
+        'but can never fuse together. No matter what they do, they are cosmically destined to stay away from',
+        'each other. All the Quantum Universe\'s a stage, these two particles merely are players, and can only',
+        'dance forever in unison.',
         '',
-        'All the Quantum Universe\'s a stage,',
-        'these two particles merely are players, but dance forever in unison.',
+        'This is a story about a particle, forever seeking a way back to its other.',
         '',
-        'This is a story about our particle, forever seeking a way back to its unique partner.',
-        '',
-        'Our particle can seemingly sense its partner particle\'s relative space-time coordinate,',
-        'however, its partner particle is always moving from one point in space to another,',
-        'thus, making it more difficult for our particle to reunite with its partner particle.',
+        'Our particle can sense its other\'s relative space-time coordinate. However, its other is always moving from', 
+        'one point in space to another, making it more difficult for the two to reunite.',
         '!beam The Quantum Beam points to your destined pair. Click to activate Quantum Beam : ',
         '! You have a max quantum beam charge of 5.',
         '',
-        'Other particles effortlessly bond with others, but not our particle.',
-        'Our particle\'s attributes are so unique, rare, and inharmonious',
-        'to other particles\' vibrations, that just getting minimal contact with another particle',
-        'could crush that particle to its most basic level before disappearing.',
-        'Getting in contact with another particle could hurt both particles.',
-        '! Avoid getting in contact with other particles.',
-        '! You have a max HP of 3.',
-        '!heart Colliding with other particles will reduce your HP : ',
+        'Other particles can effortlessly bond with each other, except for our particle. Our particle\'s attributes are so unique,',
+        'rare, and discordant to other particle\'s vibrations that getting minimal contact with another particle could damage',
+        'our particle, and crush the colliding particle to its most basic level before it disappears.',
+        '!heart Avoid getting in contact with other particles. Colliding with other particles will reduce your HP : ',
+        '! You have a max HP of 3. ',
         '',
-        'Only one particle in existence can withstand and match our particle\'s',
-        'unique vibration, our particle\'s destined pair.',
-        'Our pair particle is strong enough to not get crushed',
-        'when getting in contact with our particle,',
-        'in fact, it even empowers our particle, recharging its energy, but by doing this,',
-        'it reduces its energy to the level that it can\'t',
-        'handle our particle\'s vibrations, our pair particle should relocate.',
-        'It knows that staying won\'t do any good. It must... move away. To restore its ',
-        'energy levels and regain its original vibration. Until they meet again.',
-        '! Getting in contact with you pair particle increases your score and replenish',
-        '! 3 quantum beam charges, then teleports to another location.',
+        'Only one particle in existence can withstand and match our particle\'s unique vibration. Our particle\'s other.',
+        'Our other is strong enough to withstand the contact with our particle. It even empowers our particle,',
+        'recharging its energy. However, by doing so, it reduces its own energy until it can\'t handle',
+        'our particle\'s vibrations any longer, forcing our other to relocate. It knows that staying won\'t do any',
+        'good. It must always... move away. To restore itself and regain its original vibrations.',
+        'Until they meet again.',
+        '! Getting in contact with you pair particle increases your score and replenish three',
+        '! quantum beam charges, and sometimes an HP, then warps to another location.',
     ];
 
     let x = 50;
