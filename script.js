@@ -1141,7 +1141,7 @@ window.addEventListener('keydown', function(e) {
         name.pop();
         name = name.join('');
     } else if (e.key == 'Escape') {
-        godMode = !godMode;
+        // godMode = !godMode;
         showInstruction = false;
         showLeaderBoard = false;
     }
