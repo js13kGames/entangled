@@ -1,6 +1,52 @@
 
 //////////////////////////////////////////////////////////////////////////////// intitializations
 
+let story = [
+    'Entangled',
+    '',
+    'There was once a pair of quantumly entangled particles that can only get close to each other',
+    'but can never fuse together. No matter what they do, they are cosmically destined to stay away from',
+    'each other. All the Quantum Universe\'s a stage, these two particles merely are players, and can only',
+    'dance forever in unison.',
+    '',
+    'This is a story about a particle, forever seeking a way back to its soulmate.',
+    '',
+    '',
+    'Our particle can sense its soulmate\'s relative space-time coordinate. However, its soulmate is always moving',
+    'from one point in space to another, making it more difficult for the two to reunite.',
+    '! You have a max quantum beam charge of 5.',
+    '!beam The Quantum Beam points to your destined pair. Click to activate Quantum Beam : ',
+    '',
+    'Other particles can effortlessly bond with each other, except for our particle. Our particle\'s attributes are so unique,',
+    'rare, and discordant to other particle\'s vibrations that getting minimal contact with another particle could damage',
+    'our particle, and crush the colliding particle to its most basic level before it fades away.',
+    '! You have a max HP of 3. ',
+    '!heart Avoid getting in contact with other particles. Colliding with other particles will reduce your HP : ',
+    '',
+    'Only one particle in existence can withstand and match our particle\'s unique vibration. Our particle\'s soulmate.',
+    'Our soulmate is strong enough to withstand the contact with our particle. It even empowers our particle,',
+    'recharging its energy. However, by doing so, it reduces its own energy until it can\'t handle',
+    'our particle\'s vibrations any longer, forcing our soulmate to relocate. It knows that staying won\'t do any',
+    'good. It must always... move away. To restore itself and regain its original vibrations.',
+    'Until they meet again.',
+    '! Getting in contact with your soulmate increases your score and replenish three',
+    '! quantum beam charges, and sometimes an HP, then warps to another location.',
+    '',
+    '',
+    'Frost Particle:',
+    '!frost The Frost Particle is a big, yet rare particle. When activated, the Frost Particle can drop the temperature',
+    'to a very low level, freezing everything except our particle and its soulmate. It slowly reduces in size',
+    'until it completely disappears, reverting the temperature back to normal.',
+    '! The frost particle can only be activated by our particle.',
+    '',
+    'Phantom Particle:',
+    '!phantom The Phantom Particle is friendly, yet dangerous. It emits a very unstable vibration, causing other',
+    'particles to vibrate aggressively and preventing them to bond with each other.',
+    '! Careful! Getting in contact with these aggressively vibrating particles will instantly reduce your HP to 0.',
+    '! However, our particle could consume the phantom particle, stopping the aggressive',
+    '! phenomenon, and increasing our HP by 1.',
+];
+
 let canvas = document.getElementById('back');
 let context = canvas.getContext('2d');
 canvas.width = window.innerWidth;
@@ -25,13 +71,13 @@ let border = 50;
 let connectionOppacity = 0;
 let isPlaying = false;
 let isGG = false;
-let showInstruction = true;
+let showInstruction = false;
 let showLeaderBoard = false;
 let godMode = false;
 let score = 0;
 let name = '';
 let panelRadius = 0;
-let panelRadiusMax = canvas.height / 2 + 180;
+let panelRadiusMax = context.measureText(story[2]).width + 350;
 
 let scoreRecords = JSON.parse(localStorage.getItem('leaderboard'));
 if (!scoreRecords) {
@@ -76,6 +122,7 @@ function reInitialize() {
     for (let i = 0; i < particlesCount; i++) particles.push(new Particle());
     player.life = 3;
     player.beams = 5;
+    player.isInvulnerable = false;
     goal.showHeart = false;
     name = '';
     frostParticle = new FrostParticle();
@@ -100,7 +147,7 @@ function saveGameRecord() {
     if (score > 0) {
         scoreRecords.unshift({name, score});
         scoreRecords.sort((a, b) => a.score > b.score ? -1 : 1);
-        scoreRecords = scoreRecords.splice(0, 20);
+        scoreRecords = scoreRecords.splice(0, 13);
         localStorage.setItem('leaderboard', JSON.stringify(scoreRecords));
         scoreRecords = JSON.parse(localStorage.getItem('leaderboard'));
         localStorage.setItem('latestPlayer', name);
@@ -282,37 +329,6 @@ function drawPanel() {
 };
 
 function drawInstructions() {
-    let story = [
-        'Entangled',
-        '',
-        'There was once a pair of quantumly entangled particles that can only get close to each other',
-        'but can never fuse together. No matter what they do, they are cosmically destined to stay away from',
-        'each other. All the Quantum Universe\'s a stage, these two particles merely are players, and can only',
-        'dance forever in unison.',
-        '',
-        'This is a story about a particle, forever seeking a way back to its other.',
-        '',
-        'Our particle can sense its other\'s relative space-time coordinate. However, its other is always moving from', 
-        'one point in space to another, making it more difficult for the two to reunite.',
-        '!beam The Quantum Beam points to your destined pair. Click to activate Quantum Beam : ',
-        '! You have a max quantum beam charge of 5.',
-        '',
-        'Other particles can effortlessly bond with each other, except for our particle. Our particle\'s attributes are so unique,',
-        'rare, and discordant to other particle\'s vibrations that getting minimal contact with another particle could damage',
-        'our particle, and crush the colliding particle to its most basic level before it disappears.',
-        '!heart Avoid getting in contact with other particles. Colliding with other particles will reduce your HP : ',
-        '! You have a max HP of 3. ',
-        '',
-        'Only one particle in existence can withstand and match our particle\'s unique vibration. Our particle\'s other.',
-        'Our other is strong enough to withstand the contact with our particle. It even empowers our particle,',
-        'recharging its energy. However, by doing so, it reduces its own energy until it can\'t handle',
-        'our particle\'s vibrations any longer, forcing our other to relocate. It knows that staying won\'t do any',
-        'good. It must always... move away. To restore itself and regain its original vibrations.',
-        'Until they meet again.',
-        '! Getting in contact with you pair particle increases your score and replenish three',
-        '! quantum beam charges, and sometimes an HP, then warps to another location.',
-    ];
-
     let x = 50;
     let y = canvas.height / 2;
     for (let i = 0; i < story.length; i++) {
@@ -326,7 +342,7 @@ function drawInstructions() {
         let tempY = y + (fontSize * (i - story.length / 2) + (spacing * (i - story.length / 2)));
         let measure = context.measureText(text.join(' ')).width;
         if (text.includes('!heart')) {
-            context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            context.fillStyle = 'rgba(255, 255, 255, 0.9)';
             context.beginPath();
             context.arc(x + measure - 23, tempY + 2, 5, Math.PI * 2, false);
             context.fill();
@@ -337,7 +353,7 @@ function drawInstructions() {
             context.arc(x + measure - 15, tempY - 6, 5, Math.PI * 2, false);
             context.fill();
         } else if (text.includes('!beam')) {
-            context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            context.fillStyle = 'rgba(255, 255, 255, 0.9)';
             context.beginPath();
             context.arc(x + measure - 27, tempY, 10, Math.PI * 2, false);
             context.fill();
@@ -345,11 +361,48 @@ function drawInstructions() {
             context.beginPath();
             context.arc(x + measure - 27, tempY, 5, Math.PI * 2, false);
             context.fill();
+        } else if (text.includes('!frost')) {
+            context.strokeStyle = 'skyblue';
+            context.fillStyle = 'rgba(0, 0, 255, 0.2)';
+            context.shadowColor = 'rgba(70, 70, 255, 0.8)';
+            context.shadowBlur = 25;
+            context.lineWidth = 5;
+            context.beginPath();
+            context.arc(x + measure + 10, tempY, 25, Math.PI * 2, false);
+            context.stroke();
+            context.fill();
+            context.shadowBlur = 0;
+            context.lineWidth = 1;
+        } else if (text.includes('!phantom')) {
+            context.strokeStyle = 'pink';
+            context.fillStyle = 'rgba(255, 0, 0, 0.2)';
+            context.shadowColor = 'rgba(255, 70, 70, 0.8)';
+            context.shadowBlur = 25;
+            context.lineWidth = 4;
+            context.beginPath();
+            context.arc(x + measure - 28, tempY, 15, Math.PI * 2, false);
+            context.stroke();
+            context.fill();
+            context.shadowBlur = 0;
+            context.lineWidth = 1;
+            context.fillStyle = 'rgba(255, 192, 203, 0.6)';
+            context.beginPath();
+            context.arc(x + measure - 28, tempY + 5, 4, Math.PI * 2, false);
+            context.fill();
+            context.beginPath();
+            context.arc(x + measure - 28 - 7, tempY - 2, 4, Math.PI * 2, false);
+            context.fill();
+            context.beginPath();
+            context.arc(x + measure - 28 + 7, tempY - 2, 4, Math.PI * 2, false);
+            context.fill();
         }
         if (i == 0) {
             context.font = `bold 30px Arial`;
         } else if (text[0][0] == '!') {
             context.fillStyle = 'rgba(225, 225, 255, 0.3)';
+            if (text.includes('!frost') || text.includes('!phantom')) {
+                context.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            }
             text.shift();
         }
         context.fillText(text.join(' '), x, tempY);
@@ -607,6 +660,7 @@ function Player() {
     this.hitOpacity = 0;
     this.goalOpacity = 0;
     this.permafrostOpacity = 0;
+    this.isInvulnerable = false;
     this.update = function() {
         this.hitOpacity -= this.hitOpacity > 0 ? 0.015 : 0;
         this.goalOpacity -= this.goalOpacity > 0 ? 0.015 : 0;
@@ -614,13 +668,17 @@ function Player() {
         this.x += (this.destinationX - this.x) / 2;
         this.y += (this.destinationY - this.y) / 2;
         for (let i = 0; i < particles.length; i++) {
-            if (!godMode && isPlaying && getHypothenuse(this.x, this.y, particles[i].x, particles[i].y) < this.radius + particles[i].radius) {
+            if (!godMode && !this.isInvulnerable && isPlaying && getHypothenuse(this.x, this.y, particles[i].x, particles[i].y) < this.radius + particles[i].radius * 0.85) {
                 this.life--;
                 if (particles[i].isRed) {
                     player.life = 0;
                 }
                 particles.splice(i, 1);
                 this.hitOpacity = 0.5;
+                this.isInvulnerable = true;
+                setTimeout(() => {
+                    this.isInvulnerable = false;
+                }, 800);
             }
         }
         this.auraOpacity -= 0.02;
@@ -633,15 +691,17 @@ function Player() {
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = `rgba(120, 120, 200, ${this.permafrostOpacity})`;
         context.fillRect(0, 0, canvas.width, canvas.height);
-        context.shadowColor = 'white';
-        context.shadowBlur = this.auraOpacity > 0 ? 100 * this.auraOpacity : 0;
-        context.fillStyle = `rgba(255, 255, 255, ${this.auraOpacity > 0 ? 1 : 0.5})`;
-        context.strokeStyle = 'white';
-        context.beginPath();
-        context.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
-        context.fill();
-        context.stroke();
-        context.shadowBlur = 0;
+        if (!this.isInvulnerable || (this.isInvulnerable && randomBetween(0, 3) == 0)) {
+            context.shadowColor = 'white';
+            context.shadowBlur = this.auraOpacity > 0 ? 100 * this.auraOpacity : 0;
+            context.fillStyle = `rgba(255, 255, 255, ${this.auraOpacity > 0 ? 1 : 0.5})`;
+            context.strokeStyle = 'white';
+            context.beginPath();
+            context.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
+            context.fill();
+            context.stroke();
+            context.shadowBlur = 0;
+        }
     };
 };
 
@@ -662,12 +722,9 @@ function Goal() {
         this.y = randomBetween(border, canvas.height - border);
         if (isPlaying) {
             score++;
-            player.beams += 3;
-            if (player.beams > 5) {
-                player.beams = 5;
-            }
+            player.beams = 5;
             player.goalOpacity = 0.5;
-            if (player.life < 3 && score % 5 == 4) {
+            if (player.life < 3 && score % 3 == 0) {
                 this.showHeart = true;
             } else if (this.showHeart) {
                 this.showHeart = false;
@@ -871,7 +928,7 @@ function PhantomParticle() {
     this.initializeTimeout = function() {
         this.timeout = setTimeout(() => {
             this.active = true;
-        }, 1000 * (30 + randomBetween(0, 90)));
+        }, 1000 * (20 + randomBetween(0, 70)));
     };
     this.clearTimeout = function() {
         this.reset();
@@ -942,7 +999,7 @@ function PhantomParticle() {
         context.shadowBlur = 0;
         context.lineWidth = 1;
 
-        context.fillStyle = 'pink';
+        context.fillStyle = 'rgba(255, 192, 203, 0.6)';
         context.beginPath();
         context.arc(this.x, this.y + 10, 8, Math.PI * 2, false);
         context.fill();
@@ -963,7 +1020,7 @@ function FrostParticle() {
     this.initializeTimeout = function() {
         this.timeout = setTimeout(() => {
             this.active = true;
-        }, 1000 * 60 * 2);
+        }, 1000 * (20 + randomBetween(0, 70)));
     };
     this.clearTimeout = function() {
         this.reset();
