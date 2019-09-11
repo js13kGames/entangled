@@ -1109,7 +1109,7 @@ canvas.addEventListener('mousedown', function() {
     }
 });
 
-canvas.addEventListener('click', function() {
+canvas.addEventListener('click', function(e) {
     if (!isPlaying) {
         if (instructionButton.isHit()) {
             showLeaderBoard = false;
@@ -1130,6 +1130,10 @@ canvas.addEventListener('click', function() {
             frostParticle.initializeTimeout();
             return;
         }
+        if (getHypothenuse(100, canvas.height / 2, e.pageX, e.pageY) > panelRadius) {
+            showInstruction = false;
+            showLeaderBoard = false;
+        }
     }
 });
 
@@ -1144,6 +1148,9 @@ window.addEventListener('keydown', function(e) {
         // godMode = !godMode;
         showInstruction = false;
         showLeaderBoard = false;
+    } else if (e.key == 'Enter' && isGG && name.length) {
+        saveGameRecord();
+        reInitialize();
     }
 });
 
