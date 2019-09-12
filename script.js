@@ -79,13 +79,13 @@ let name = '';
 let panelRadius = 0;
 let panelRadiusMax = context.measureText(story[2]).width + 350;
 
-let scoreRecords = JSON.parse(localStorage.getItem('leaderboard'));
+let scoreRecords = JSON.parse(localStorage.getItem('entangled_leaderboard'));
 if (!scoreRecords) {
-    localStorage.setItem('leaderboard', JSON.stringify([]));
+    localStorage.setItem('entangled_leaderboard', JSON.stringify([]));
     scoreRecords = [];
 }
 
-let latestPlayer = localStorage.getItem('latestPlayer');
+let latestPlayer = localStorage.getItem('entangled_latestPlayer');
 if (!latestPlayer) {
     latestPlayer = '';
 }
@@ -148,10 +148,10 @@ function saveGameRecord() {
         scoreRecords.unshift({name, score});
         scoreRecords.sort((a, b) => a.score > b.score ? -1 : 1);
         scoreRecords = scoreRecords.splice(0, 13);
-        localStorage.setItem('leaderboard', JSON.stringify(scoreRecords));
-        scoreRecords = JSON.parse(localStorage.getItem('leaderboard'));
-        localStorage.setItem('latestPlayer', name);
-        latestPlayer = localStorage.getItem('latestPlayer');
+        localStorage.setItem('entangled_leaderboard', JSON.stringify(scoreRecords));
+        scoreRecords = JSON.parse(localStorage.getItem('entangled_leaderboard'));
+        localStorage.setItem('entangled_latestPlayer', name);
+        latestPlayer = localStorage.getItem('entangled_latestPlayer');
     }
 };
 
@@ -1148,7 +1148,7 @@ window.addEventListener('keydown', function(e) {
         // godMode = !godMode;
         showInstruction = false;
         showLeaderBoard = false;
-    } else if ((e.key == 'Enter' || e.key == 'Space') && isGG && name.length) {
+    } else if (e.key == 'Enter' && isGG && name.length) {
         saveGameRecord();
         reInitialize();
     }
