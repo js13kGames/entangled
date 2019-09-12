@@ -1148,7 +1148,7 @@ window.addEventListener('keydown', function(e) {
         // godMode = !godMode;
         showInstruction = false;
         showLeaderBoard = false;
-    } else if (e.key == 'Enter' && isGG && name.length) {
+    } else if ((e.key == 'Enter' || e.key == 'Space') && isGG && name.length) {
         saveGameRecord();
         reInitialize();
     }
